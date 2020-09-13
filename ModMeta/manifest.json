@@ -1,8 +1,8 @@
 {
-    "name": "Kevin's Classic Additions",
-    "version_number": "1.0",
+    "name": "Kevins_Classic_Additions",
+    "version_number": "1.0.1",
     "website_url": "https://github.com/kyoung75/KevinsClassics",
-    "description": "Adds items from Risk of Rain 1 which didn't make the cut.",
+    "description": "This mod adds additional items to the game (currently only 1, but more will be made in the coming weeks). It is built off of ThinkInvisible's ClassicItems and TILER2. Special thanks to him for making that, as well as for helping me a few times during the creation of this. Also, thanks to Nebulon for making the icon(s) used.",
     "dependencies": [
         "bbepis-BepInExPack-5.3.1",
         "tristanmcpherson-R2API-2.5.7",

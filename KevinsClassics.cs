@@ -21,7 +21,7 @@ namespace KevinfromHP.KevinsClassics
 {
     [BepInPlugin(ModGuid, ModName, ModVer)]
     [BepInDependency(R2API.R2API.PluginGUID, R2API.R2API.PluginVersion)]
-    [BepInDependency(TILER2Plugin.ModGuid, "2.0.0")]
+    [BepInDependency(TILER2Plugin.ModGuid, "2.1.3")]
     [BepInDependency(ClassicItemsPlugin.ModGuid, "4.5.0")]
     [BepInDependency("com.funkfrog_sipondo.sharesuite", BepInDependency.DependencyFlags.SoftDependency)]
     [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.EveryoneNeedSameModVersion)]
@@ -32,7 +32,7 @@ namespace KevinfromHP.KevinsClassics
 #if DEBUG
                 "0." +
 #endif
-            "1.0.1";
+            "1.0.3";
         public const string ModName = "KevinsClassics";
         public const string ModGuid = "com.KevinfromHP.KevinsClassics";
 
@@ -305,7 +305,6 @@ namespace KevinfromHP.KevinsClassics
                     if (item == null) continue;
                     pname = Language.GetString(item.nameToken);
                     pdesc = Language.GetString(globalConfig.longDesc ? item.descriptionToken : item.pickupToken);
-                    Logger.LogMessage("Checkpoint 8");
                     switch (item.tier)
                     {
                         case ItemTier.Boss: prar = new Color(1f, 1f, 0f); break;
