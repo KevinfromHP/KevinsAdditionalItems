@@ -6,10 +6,7 @@ using System;
 using System.Collections.ObjectModel;
 using TILER2;
 using static TILER2.MiscUtil;
-using static TILER2.StatHooks;
 using Mono.Cecil;
-using R2API.Utils;
-using ThinkInvisible.ClassicItems;
 
 namespace KevinfromHP.KevinsClassics
 {
@@ -47,7 +44,7 @@ namespace KevinfromHP.KevinsClassics
         private bool ilFailed = false;
 
 
-        public BuffIndex ArtemisBlessingBuff { get; private set; }
+        //public BuffIndex ArtemisBlessingBuff { get; private set; }
         protected override string NewLangName(string langid = null) => displayName;
         protected override string NewLangPickup(string langid = null) => "The further you are, the more damage you do. Don't get too close, though...";
         protected override string NewLangDesc(string langid = null) => "Damage increases the further your distance from a target.\n<style=cDeath>Damage decreases the closer your distance to a target.</style>";
@@ -56,18 +53,8 @@ namespace KevinfromHP.KevinsClassics
 
         public ArtemisBlessing()
         {
-            onAttrib += (tokenIdent, namePrefix) =>
-            {
-                var ArtemisBlessingBuffDef = new R2API.CustomBuff(new BuffDef
-                {
-                    buffColor = new Color(1f, 1f, 1f),
-                    canStack = true,
-                    isDebuff = false,
-                    name = namePrefix + "ArtemisBlessing",
-                    iconPath = "@KevinsClassics:Assets/KevinsClassics/icons/ArtemisBlessing_icon.png"
-                });
-                ArtemisBlessingBuff = R2API.BuffAPI.Add(ArtemisBlessingBuffDef);
-            };
+            modelPathName = "@KevinsClassics:Assets/KevinsClassics/prefabs/ArtemisBlessing.prefab";
+            iconPathName = "@KevinsClassics:Assets/KevinsClassics/textures/icons/ArtemisBlessing_icon.png";
         }
 
 
@@ -80,10 +67,6 @@ namespace KevinfromHP.KevinsClassics
                 IL.RoR2.BulletAttack.DefaultHitCallback -= IL_CBDefaultHitCallback;
                 IL.RoR2.HealthComponent.TakeDamage -= IL_CBTakeDamage;
             }
-            else
-            {
-                On.RoR2.CharacterBody.OnInventoryChanged += On_CBInventoryChanged;
-            }
         }
 
 
@@ -91,41 +74,7 @@ namespace KevinfromHP.KevinsClassics
         {
             IL.RoR2.BulletAttack.DefaultHitCallback -= IL_CBDefaultHitCallback;
             IL.RoR2.HealthComponent.TakeDamage -= IL_CBTakeDamage;
-            On.RoR2.CharacterBody.OnInventoryChanged -= On_CBInventoryChanged;
         }
-
-
-        private void OnConfigEntryChanged(object sender, AutoUpdateEventArgs args)
-        {
-            AliveList().ForEach(cm =>
-            {
-                if (cm.hasBody) UpdateABBuff(cm.GetBody());
-            });
-        }
-
-
-        private void On_CBInventoryChanged(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self)
-        {
-            orig(self);
-            var cpt = self.GetComponent<ArtemisBlessingComponent>();
-            if (!cpt) cpt = self.gameObject.AddComponent<ArtemisBlessingComponent>();
-            var newIcnt = GetCount(self);
-            if (cpt.cachedIcnt != newIcnt)
-            {
-                cpt.cachedIcnt = newIcnt;
-                UpdateABBuff(self);
-            }
-        }
-
-
-        void UpdateABBuff(CharacterBody cb)
-        {
-            var cpt = cb.GetComponent<ArtemisBlessingComponent>();
-            int currBuffStacks = cb.GetBuffCount(ArtemisBlessingBuff);
-            if (cpt.cachedIcnt != currBuffStacks)
-                cb.SetBuffCount(ArtemisBlessingBuff, cpt.cachedIcnt);   
-        }
-
 
         private void IL_CBDefaultHitCallback(ILContext il) // Reduces the damage falloff when equipped
         {
@@ -243,7 +192,6 @@ namespace KevinfromHP.KevinsClassics
                     float aDist = (chrm.GetBody().corePosition - body.body.corePosition).magnitude;
 
                     //Damage Calculation
-                    //float distCoef = Math.Abs((Math.Min(aDist, 300f) - 25) * 0.05f);
                     return origdmg * (1 + (Math.Max((Math.Min(aDist, maxDist) - medDist) * effectMult, minReduction - 1.0f) * icnt));
                 });
                 c.Emit(OpCodes.Stloc, locDmg);
