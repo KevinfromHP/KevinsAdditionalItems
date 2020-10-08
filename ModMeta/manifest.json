@@ -1,12 +1,11 @@
 {
-    "name": "Kevins_Classic_Additions",
-    "version_number": "1.0.1",
-    "website_url": "https://github.com/kyoung75/KevinsClassics",
-    "description": "This mod adds additional items to the game (currently only 1, but more will be made in the coming weeks). It is built off of ThinkInvisible's ClassicItems and TILER2. Special thanks to him for making that, as well as for helping me a few times during the creation of this. Also, thanks to Nebulon for making the icon(s) used.",
+    "name": "Kevins_Additional_Items",
+    "version_number": "2.3.6",
+    "website_url": "https://github.com/KevinfromHP/KevinsClassicAdditions",
+    "description": "Adds additional items to the game. Built off of ThinkInvisible's TILER2. Special thanks to him for making that and for helping me. Thanks to Nebulon for making the icons and models used, I couldn't be here without you dude.",
     "dependencies": [
         "bbepis-BepInExPack-5.3.1",
         "tristanmcpherson-R2API-2.5.7",
-        "ThinkInvis-TILER2-2.0.0",
-        "ThinkInvis-ClassicItems-4.5.0"
+        "ThinkInvis-TILER2-2.2.2"
     ]
 }
