@@ -1,8 +1,4 @@
 ﻿using RoR2;
-using UnityEngine;
-using MonoMod.Cil;
-using Mono.Cecil.Cil;
-using System;
 using System.Collections.ObjectModel;
 using TILER2;
 using static TILER2.StatHooks;
@@ -20,14 +16,14 @@ namespace KevinfromHP.KevinsClassics
         public float armorAdd { get; private set; } = 10f;
         protected override string NewLangName(string langid = null) => displayName;
         protected override string NewLangPickup(string langid = null) => "Gain " + armorAdd + " armor.";
-        protected override string NewLangDesc(string langid = null) => "Gain " + armorAdd + " armor.";
+        protected override string NewLangDesc(string langid = null) => "Gain " + armorAdd + " armor (+" + armorAdd + " per stack).";
         protected override string NewLangLore(string langid = null) => "A seemingly new item you've never seen before...";
 
 
         public AdamantiumChestplate()
         {
             modelPathName = "@KevinsClassics:Assets/KevinsClassics/prefabs/AdamantiumChestplate.prefab";
-            iconPathName = "@KevinsClassics:Assets/KevinsClassics/textures/icons/icon.png"; //Placeholder icon, fix this later
+            iconPathName = "@KevinsClassics:Assets/KevinsClassics/textures/icons/AdamantiumChestplate_icon.png";
         }
 
 

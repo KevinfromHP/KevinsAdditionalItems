@@ -46,7 +46,7 @@ namespace KevinfromHP.KevinsClassics
 
         //public BuffIndex ArtemisBlessingBuff { get; private set; }
         protected override string NewLangName(string langid = null) => displayName;
-        protected override string NewLangPickup(string langid = null) => "The further you are, the more damage you do. Don't get too close, though...";
+        protected override string NewLangPickup(string langid = null) => "The further you are, the more damage you do.\n<style=cDeath>Don't get too close, though...</style>";
         protected override string NewLangDesc(string langid = null) => "Damage increases the further your distance from a target.\n<style=cDeath>Damage decreases the closer your distance to a target.</style>";
         protected override string NewLangLore(string langid = null) => "A seemingly new item you've never seen before...";
 

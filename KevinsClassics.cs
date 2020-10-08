@@ -15,6 +15,7 @@ using Path = System.IO.Path;
 using System.Collections.ObjectModel;
 using TILER2;
 using static TILER2.MiscUtil;
+using System.Runtime.CompilerServices;
 
 namespace KevinfromHP.KevinsClassics
 {
@@ -30,7 +31,7 @@ namespace KevinfromHP.KevinsClassics
 #if DEBUG
                 "0." +
 #endif
-            "2.2.3";
+            "2.3.6";
         public const string ModName = "KevinsCustoms";
         public const string ModGuid = "com.KevinfromHP.KevinsCustoms";
 
@@ -39,6 +40,7 @@ namespace KevinfromHP.KevinsClassics
         internal static FilingDictionary<ItemBoilerplate> masterItemList = new FilingDictionary<ItemBoilerplate>();
 
         internal static BepInEx.Logging.ManualLogSource _logger;
+
 
 #if DEBUG
         public void Update()
@@ -77,7 +79,7 @@ namespace KevinfromHP.KevinsClassics
             }
             cfgFile = new ConfigFile(Path.Combine(Paths.ConfigPath, ModGuid + ".cfg"), true);
 
-            masterItemList = ItemBoilerplate.InitAll("TinkersSatchel");
+            masterItemList = ItemBoilerplate.InitAll("KevinsClassics");
             foreach (ItemBoilerplate x in masterItemList)
             {
                 x.SetupConfig(cfgFile);
@@ -107,7 +109,7 @@ namespace KevinfromHP.KevinsClassics
             {
                 x.SetupBehavior();
             }
-        }
 
+        }
     }
 }
