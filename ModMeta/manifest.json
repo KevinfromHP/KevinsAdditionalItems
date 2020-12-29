@@ -1,11 +1,11 @@
 {
     "name": "Kevins_Additional_Items",
-    "version_number": "2.3.6",
-    "website_url": "https://github.com/KevinfromHP/KevinsClassicAdditions",
+    "version_number": "3.5.9",
+    "website_url": "https://github.com/KevinfromHP/KevinsAdditionalItems",
     "description": "Adds additional items to the game. Built off of ThinkInvisible's TILER2. Special thanks to him for making that and for helping me. Thanks to Nebulon for making the icons and models used, I couldn't be here without you dude.",
     "dependencies": [
         "bbepis-BepInExPack-5.3.1",
         "tristanmcpherson-R2API-2.5.7",
-        "ThinkInvis-TILER2-2.2.2"
+        "ThinkInvis-TILER2-3.0.4"
     ]
 }

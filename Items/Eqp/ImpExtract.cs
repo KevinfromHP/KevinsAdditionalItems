@@ -18,51 +18,57 @@ using System.Linq.Expressions;
  * Better controls in Imp mode (Is this even reasonably possible?)
  */
 
-
-
-namespace KevinfromHP.KevinsClassics
+namespace KevinfromHP.KevinsAdditions
 {
-    public class ImpExtract : Equipment<ImpExtract>
+    public class ImpExtract : Equipment_V2<ImpExtract>
     {
         public override string displayName => "Imp Extract";
 
         [AutoUpdateEventInfo(AutoUpdateEventFlags.InvalidateDescToken | AutoUpdateEventFlags.InvalidatePickupToken)]
-        [AutoItemConfig("Duration of the equipment.", AutoItemConfigFlags.None, 0f, float.MaxValue)]
+        [AutoConfig("Duration of the equipment.", AutoConfigFlags.PreventNetMismatch, 0f, float.MaxValue)]
         public float duration { get; private set; } = 15f;
 
         public BuffIndex ImpExtractBuff { get; private set; }
 
-        public override float eqpCooldown { get; protected set; } = 100f;
-        public override bool eqpEnigmable => false;
-        protected override string NewLangName(string langid = null) => displayName;
-        protected override string NewLangPickup(string langid = null) => "Transform into an Imp Overlord for " + duration + " seconds.";
-        protected override string NewLangDesc(string langid = null) => "Transform into an Imp Overlord for " + duration + " seconds.";
-        protected override string NewLangLore(string langid = null) => "A seemingly new item you've never seen before...";
+        public override float cooldown { get; protected set; } = 100f;
+        protected override string GetNameString(string langid = null) => displayName;
+        protected override string GetPickupString(string langid = null) => "Transform into an Imp Overlord for " + duration + " seconds.";
+        protected override string GetDescString(string langid = null) => "<style=cIsDamage>Transform</style> into an <style=cDeath>Imp Overlord</style> for <style=cIsUtility>" + duration + "</style> seconds. Damage increased by <style=cIsDamage>40%</style> while active.";
+        protected override string GetLoreString(string langid = null) => "Order: Crux Brand Silly Red Seltzer! \nNumber: 09** \nEstimated Delivery: 04/12/2056 \nShipping Method: High Priority/Fragile \nShipping Address: Crux Fairgrounds, Tent 1, Earth \nShipping Details:" +
+            "\n\nVeril-" +
+            "\n\nI did exactly as you said, even used the stupid little bottle you sent me. Mehri doesn't suspect a thing, and they certainly won't notice a bit of this gunk missing. I expect my payment, in full, for pulling this off, and don't think I forgot the extra you promised if I got it in the bottle. " +
+            "I don't understand why you or your weird little gang want this stuff, though. It's so gross, and...well, I can't quite describe it, but I feel wrong whenever I'm around it. As if \"something\" is watching me..." +
+            "\n\n...And it's like that \"something\" hates me." +
+            "\n\t(Lore by Keroro1454)";
 
         public string key;
 
         public ImpExtract()
         {
-            modelPathName = "@KevinsClassics:Assets/KevinsClassics/prefabs/ImpExtract.prefab";
-            iconPathName = "@KevinsClassics:Assets/KevinsClassics/textures/icons/ImpExtract_icon.png";
-            onAttrib += (tokenIdent, namePrefix) =>
+            modelResourcePath = "@KevinsAdditions:Assets/KevinsAdditions/prefabs/ImpExtract.prefab";
+            iconResourcePath = "@KevinsAdditions:Assets/KevinsAdditions/textures/icons/ImpExtract_icon.png";
+        }
+
+        public override void SetupAttributes()
+        {
+            base.SetupAttributes();
+            var ImpExtractBuffDef = new R2API.CustomBuff(new BuffDef
             {
-                var ImpExtractBuffDef = new R2API.CustomBuff(new BuffDef
-                {
-                    buffColor = Color.white,
-                    canStack = false,
-                    isDebuff = false,
-                    name = namePrefix + "ImpExtract",
-                    iconPath = "@KevinsClassics:Assets/KevinsClassics/textures/icons/ImpExtractBuff_icon.png"
-                });
-                ImpExtractBuff = BuffAPI.Add(ImpExtractBuffDef);
-            };
+                buffColor = Color.white,
+                canStack = false,
+                isDebuff = false,
+                name = "KAIImpExtract",
+                iconPath = "@KevinsAdditions:Assets/KevinsAdditions/textures/icons/ImpExtractBuff_icon.png"
+            });
+            ImpExtractBuff = BuffAPI.Add(ImpExtractBuffDef);
         }
 
         //-----------------------------------------------
 
-        protected override void LoadBehavior()
+        public override void Install()
         {
+            base.Install();
+
             GetStatCoefficients += Evt_TILER2GetStatCoefficients;
             if (key == null)
                 On.RoR2.UI.ContextManager.Awake += On_DrawHUD;
@@ -72,8 +78,10 @@ namespace KevinfromHP.KevinsClassics
             On.RoR2.Run.BeginGameOver += On_GameOver;
         }
 
-        protected override void UnloadBehavior()
+        public override void Uninstall()
         {
+            base.Uninstall();
+
             GetStatCoefficients -= Evt_TILER2GetStatCoefficients;
             On.RoR2.UI.ContextManager.Awake -= On_DrawHUD;
             On.RoR2.CharacterBody.RemoveBuff -= On_BuffEnd;
@@ -160,7 +168,7 @@ namespace KevinfromHP.KevinsClassics
 
         //-----------------------------------------------
 
-        protected override bool OnEquipUseInner(EquipmentSlot slot)
+        protected override bool PerformEquipmentAction(EquipmentSlot slot)
         {
             CharacterBody sbdy = slot.characterBody;
             if (sbdy == null) return false;
@@ -303,7 +311,7 @@ namespace KevinfromHP.KevinsClassics
             yield return new WaitUntil(() => frame == 2);
             count = false;
             var body = master.GetBody();
-            if(become)
+            if (become)
             {
                 body.healthComponent.health = body.maxHealth * health;
                 body.healthComponent.barrier = barrier;
@@ -324,7 +332,7 @@ namespace KevinfromHP.KevinsClassics
         }
         public void Update()
         {
-            if(count) frame++;
+            if (count) frame++;
             else frame = 0;
             if (master && isImp)
             {

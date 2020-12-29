@@ -8,58 +8,64 @@ using TILER2;
 using static TILER2.MiscUtil;
 using Mono.Cecil;
 
-namespace KevinfromHP.KevinsClassics
+namespace KevinfromHP.KevinsAdditions
 {
-    public class ArtemisBlessing : Item<ArtemisBlessing>
+    public class ArtemisBlessing : Item_V2<ArtemisBlessing>
     {
         public override string displayName => "Artemis' Blessing";
         public override ItemTier itemTier => ItemTier.Lunar;
         public override ReadOnlyCollection<ItemTag> itemTags => new ReadOnlyCollection<ItemTag>(new[] { ItemTag.Damage });
 
-        [AutoUpdateEventInfo(AutoUpdateEventFlags.InvalidateDescToken)]
-        [AutoItemConfig("Median Distance from target (Point where damage is unaffected)", AutoItemConfigFlags.PreventNetMismatch, 0f, float.MaxValue)]
+        [AutoConfigUpdateActions(AutoConfigUpdateActionTypes.InvalidateLanguage)]
+        [AutoConfig("Median Distance from target (Point where damage is unaffected)", AutoConfigFlags.PreventNetMismatch, 0f, float.MaxValue)]
         public float medDist { get; private set; } = 25f;
 
-        [AutoUpdateEventInfo(AutoUpdateEventFlags.InvalidateDescToken)]
-        [AutoItemConfig("Minimum Damage from Distances closer than Median Range (Will continue to reduce if stacked!)", AutoItemConfigFlags.PreventNetMismatch, 0f, 1f)]
+        [AutoConfigUpdateActions(AutoConfigUpdateActionTypes.InvalidateLanguage)]
+        [AutoConfig("Minimum Damage from Distances closer than Median Range (Will continue to reduce if stacked!)", AutoConfigFlags.PreventNetMismatch, 0f, 1f)]
         public float minReduction { get; private set; } = 0.1f;
 
-        [AutoUpdateEventInfo(AutoUpdateEventFlags.InvalidateDescToken)]
-        [AutoItemConfig("Maximum Distance where damage will continue to increase", AutoItemConfigFlags.PreventNetMismatch, 0f, float.MaxValue)]
+        [AutoConfigUpdateActions(AutoConfigUpdateActionTypes.InvalidateLanguage)]
+        [AutoConfig("Maximum Distance where damage will continue to increase", AutoConfigFlags.PreventNetMismatch, 0f, float.MaxValue)]
         public float maxDist { get; private set; } = 300f;
 
-        [AutoUpdateEventInfo(AutoUpdateEventFlags.InvalidateDescToken)]
-        [AutoItemConfig("Damage Addition/Reduction per meter from Median Range", AutoItemConfigFlags.PreventNetMismatch, 0f, float.MaxValue)]
+        [AutoConfigUpdateActions(AutoConfigUpdateActionTypes.InvalidateLanguage)]
+        [AutoConfig("Damage Addition/Reduction per meter from Median Range", AutoConfigFlags.PreventNetMismatch, 0f, float.MaxValue)]
         public float effectMult { get; private set; } = 0.025f;
 
-        [AutoUpdateEventInfo(AutoUpdateEventFlags.InvalidateDescToken)]
-        [AutoItemConfig("Damage falloff change for non-shotgun bullets (the minimum percent of damage possible e.g. 50% of original damage)", AutoItemConfigFlags.PreventNetMismatch, 0.5f, 1f)]
+        [AutoConfigUpdateActions(AutoConfigUpdateActionTypes.InvalidateLanguage)]
+        [AutoConfig("Damage falloff change for non-shotgun bullets (the minimum percent of damage possible e.g. 50% of original damage)", AutoConfigFlags.PreventNetMismatch, 0.5f, 1f)]
         public float falloffBullet { get; private set; } = 0.8f;
 
-        [AutoUpdateEventInfo(AutoUpdateEventFlags.InvalidateDescToken)]
-        [AutoItemConfig("Damage falloff change for shotgun pellets (the minimum percent of damage possible e.g. 50% of original damage)", AutoItemConfigFlags.PreventNetMismatch, 0.25f, 1f)]
+        [AutoConfigUpdateActions(AutoConfigUpdateActionTypes.InvalidateLanguage)]
+        [AutoConfig("Damage falloff change for shotgun pellets (the minimum percent of damage possible e.g. 50% of original damage)", AutoConfigFlags.PreventNetMismatch, 0.25f, 1f)]
         public float falloffShotgun { get; private set; } = 0.8f;
 
-        public bool inclDeploys { get; private set; } = false;
         private bool ilFailed = false;
 
 
         //public BuffIndex ArtemisBlessingBuff { get; private set; }
-        protected override string NewLangName(string langid = null) => displayName;
-        protected override string NewLangPickup(string langid = null) => "The further you are, the more damage you do.\n<style=cDeath>Don't get too close, though...</style>";
-        protected override string NewLangDesc(string langid = null) => "Damage increases the further your distance from a target.\n<style=cDeath>Damage decreases the closer your distance to a target.</style>";
-        protected override string NewLangLore(string langid = null) => "A seemingly new item you've never seen before...";
+        protected override string GetNameString(string langid = null) => displayName;
+        protected override string GetPickupString(string langid = null) => "The further you are, the more damage you do.\n<style=cDeath>Don't get too close, though...</style>";
+        protected override string GetDescString(string langid = null) => "Damage increases by <style=cIsDamage>" + (int)(effectMult * 100) + "%</style> " + "<style=cStack>(+" + (int)(effectMult * 100) + "% per stack)</style> per <style=cIsUtility>meter</style> away from a target.\n" +
+            "<style=cDeath>Damage decreases by the same amount the closer your distance to a target.</style> Distance where damage output is unaffected is <style=cIsUtility>   " + (int)medDist + "m</style>.";
+        protected override string GetLoreString(string langid = null) => "My love! How I anguish to see you like this, laid out limp upon my arms. You, who was once so powerful, so full of life, he who could conquer any beast. To have been felled by such a devious trick of hers', the vile scorpion. It is such a crime the gods must avert their eyes in shame for allowing this to happen." +
+            "\n\nBut you shall not be forgotten, doomed as a shade below for all eternity. I shall bless your body, and place you high in the skies, to glow with strength forever. Distant above even the gods, from far away you shall remind everyone of your power." +
+            "\n\n - Inscription upon a club, found in an empty marble tomb" +
+            "\n\t(Lore by Keroro1454, item idea by TheGoldenOne)";
 
 
         public ArtemisBlessing()
         {
-            modelPathName = "@KevinsClassics:Assets/KevinsClassics/prefabs/ArtemisBlessing.prefab";
-            iconPathName = "@KevinsClassics:Assets/KevinsClassics/textures/icons/ArtemisBlessing_icon.png";
+            modelResourcePath = "@KevinsAdditions:Assets/KevinsAdditions/prefabs/ArtemisBlessing.prefab";
+            iconResourcePath = "@KevinsAdditions:Assets/KevinsAdditions/textures/icons/ArtemisBlessing_icon.png";
         }
 
 
-        protected override void LoadBehavior()
+        public override void Install()
         {
+            base.Install();
+
+            On.RoR2.CharacterBody.OnInventoryChanged += GetItemCount;
             IL.RoR2.BulletAttack.DefaultHitCallback += IL_CBDefaultHitCallback;
             IL.RoR2.HealthComponent.TakeDamage += IL_CBTakeDamage;
             if (ilFailed)
@@ -68,31 +74,41 @@ namespace KevinfromHP.KevinsClassics
                 IL.RoR2.HealthComponent.TakeDamage -= IL_CBTakeDamage;
             }
         }
-
-
-        protected override void UnloadBehavior()
+        public override void Uninstall()
         {
+            base.Uninstall();
+
+            On.RoR2.CharacterBody.OnInventoryChanged -= GetItemCount;
             IL.RoR2.BulletAttack.DefaultHitCallback -= IL_CBDefaultHitCallback;
             IL.RoR2.HealthComponent.TakeDamage -= IL_CBTakeDamage;
         }
+
+        private void GetItemCount(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self)
+        {
+            orig(self);
+            ArtemisBlessingComponent cpt = self.gameObject.GetComponent<ArtemisBlessingComponent>();
+            if (!cpt) cpt = self.gameObject.AddComponent<ArtemisBlessingComponent>();
+            cpt.cachedIcnt = GetCount(self);
+        }
+
 
         private void IL_CBDefaultHitCallback(ILContext il) // Reduces the damage falloff when equipped
         {
             var c = new ILCursor(il);
             bool ILFound;
 
-            int icnt = 0;
+            ArtemisBlessingComponent cpt = null;
             c.Emit(OpCodes.Ldarg_0);
             c.EmitDelegate<Action<BulletAttack>>((thing) =>
             {
-                icnt = GetCount(thing.owner.GetComponent<CharacterBody>().master.inventory);
+                cpt = thing.owner.GetComponent<ArtemisBlessingComponent>();
             });
 
-            if (icnt == 0) return;
+            if (!cpt) return;
 
             ILFound = c.TryGotoNext(
                 x => x.MatchLdcR4(0.5f),
-                x => x.MatchLdcR4(60f), 
+                x => x.MatchLdcR4(60f),
                 x => x.MatchLdcR4(25f),
                 x => x.MatchLdarg(1),
                 x => x.MatchLdfld<BulletAttack.BulletHit>("distance"),
@@ -103,7 +119,7 @@ namespace KevinfromHP.KevinsClassics
             if (!ILFound)
             {
                 ilFailed = true;
-                KevinsClassicsPlugin._logger.LogError("Failed to apply Artemis' Blessing IL patch (bulletfalloff var read), item will not work; target instructions not found");
+                KevinsAdditionsPlugin._logger.LogError("Failed to apply Artemis' Blessing IL patch (bulletfalloff var read), item will not work; target instructions not found");
                 return;
             }
             else
@@ -126,15 +142,12 @@ namespace KevinfromHP.KevinsClassics
             if (!ILFound)
             {
                 ilFailed = true;
-                KevinsClassicsPlugin._logger.LogError("Failed to apply Artemis' Blessing IL patch (shotgunfalloff var read), item will not work; target instructions not found");
+                KevinsAdditionsPlugin._logger.LogError("Failed to apply Artemis' Blessing IL patch (shotgunfalloff var read), item will not work; target instructions not found");
                 return;
             }
-            else
-            {
-                c.Next.Operand = falloffShotgun;
-                c.Index += 8;
-                c.Next.Operand = 1f - falloffShotgun;
-            }
+            c.Next.Operand = falloffShotgun;
+            c.Index += 8;
+            c.Next.Operand = 1f - falloffShotgun;
         }
 
 
@@ -152,7 +165,7 @@ namespace KevinfromHP.KevinsClassics
             if (!ILFound)
             {
                 ilFailed = true;
-                KevinsClassicsPlugin._logger.LogError("Failed to apply Artemis' Blessing IL patch (damage var read), item will not work; target instructions not found");
+                KevinsAdditionsPlugin._logger.LogError("Failed to apply Artemis' Blessing IL patch (damage var read), item will not work; target instructions not found");
                 return;
             }
 
@@ -168,7 +181,7 @@ namespace KevinfromHP.KevinsClassics
             if (!ILFound)
             {
                 ilFailed = true;
-                KevinsClassicsPlugin._logger.LogError("Failed to apply Artemis' Blessing IL patch (damage var read), item will not work; target instructions not found");
+                KevinsAdditionsPlugin._logger.LogError("Failed to apply Artemis' Blessing IL patch (damage var read), item will not work; target instructions not found");
                 return;
             }
 
@@ -187,19 +200,18 @@ namespace KevinfromHP.KevinsClassics
                 c.Emit(OpCodes.Ldloc, locDmg);
                 c.EmitDelegate<Func<CharacterMaster, HealthComponent, float, float>>((chrm, body, origdmg) =>
                 {
-                    var icnt = GetCount(chrm.inventory);
-                    if (icnt == 0) return origdmg;
+                    ArtemisBlessingComponent cpt = chrm.GetBodyObject().GetComponent<ArtemisBlessingComponent>();
+                    if (!cpt || cpt.cachedIcnt == 0) return origdmg;
                     float aDist = (chrm.GetBody().corePosition - body.body.corePosition).magnitude;
 
-                    //Damage Calculation
-                    return origdmg * (1 + (Math.Max((Math.Min(aDist, maxDist) - medDist) * effectMult, minReduction - 1.0f) * icnt));
+                    return origdmg * (1 + (Math.Max((Math.Min(aDist, maxDist) - medDist) * effectMult, minReduction - 1.0f) * cpt.cachedIcnt)); //Damage Calculation
                 });
                 c.Emit(OpCodes.Stloc, locDmg);
             }
             else
             {
                 ilFailed = true;
-                KevinsClassicsPlugin._logger.LogError("Failed to apply Artemis' Blessing IL patch (damage var write), item will not work; target instructions not found");
+                KevinsAdditionsPlugin._logger.LogError("Failed to apply Artemis' Blessing IL patch (damage var write), item will not work; target instructions not found");
                 return;
             }
 
@@ -210,7 +222,6 @@ namespace KevinfromHP.KevinsClassics
     public class ArtemisBlessingComponent : MonoBehaviour
     {
         public int cachedIcnt = 0;
-        public float cachedDist = 0;
     }
 }
 

@@ -1,5 +1,4 @@
 ﻿using BepInEx;
-using MonoMod.Cil;
 using R2API;
 using R2API.Utils;
 using RoR2;
@@ -7,38 +6,30 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using BepInEx.Configuration;
-using Mono.Cecil.Cil;
-using System;
-using TMPro;
-using UnityEngine.Networking;
 using Path = System.IO.Path;
-using System.Collections.ObjectModel;
 using TILER2;
 using static TILER2.MiscUtil;
-using System.Runtime.CompilerServices;
 
-namespace KevinfromHP.KevinsClassics
+namespace KevinfromHP.KevinsAdditions
 {
     [BepInPlugin(ModGuid, ModName, ModVer)]
     [BepInDependency(R2API.R2API.PluginGUID, R2API.R2API.PluginVersion)]
-    [BepInDependency(TILER2Plugin.ModGuid, "2.2.2")]
+    [BepInDependency(TILER2Plugin.ModGuid, "3.0.4")]
     [BepInDependency("com.funkfrog_sipondo.sharesuite", BepInDependency.DependencyFlags.SoftDependency)]
     [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.EveryoneNeedSameModVersion)]
     [R2APISubmoduleDependency(nameof(ItemAPI), nameof(LanguageAPI), nameof(ResourcesAPI), nameof(PlayerAPI), nameof(PrefabAPI), nameof(BuffAPI), nameof(LoadoutAPI))]
-    public class KevinsClassicsPlugin : BaseUnityPlugin
+    public class KevinsAdditionsPlugin : BaseUnityPlugin
     {
         public const string ModVer =
 #if DEBUG
                 "0." +
 #endif
-            "2.3.6";
-        public const string ModName = "KevinsCustoms";
-        public const string ModGuid = "com.KevinfromHP.KevinsCustoms";
+            "3.5.9";
+        public const string ModName = "KevinsAdditions";
+        public const string ModGuid = "com.KevinfromHP.KevinsAdditions";
 
         private static ConfigFile cfgFile;
-
-        internal static FilingDictionary<ItemBoilerplate> masterItemList = new FilingDictionary<ItemBoilerplate>();
-
+        internal static FilingDictionary<CatalogBoilerplate> masterItemList = new FilingDictionary<CatalogBoilerplate>();
         internal static BepInEx.Logging.ManualLogSource _logger;
 
 
@@ -71,45 +62,30 @@ namespace KevinfromHP.KevinsClassics
             _logger = Logger;
 
             Logger.LogDebug("Loading assets...");
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("KevinsClassics.kevinsclassics_assets"))
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("KevinsAdditions.kevinsadditions_assets"))
             {
                 var bundle = AssetBundle.LoadFromStream(stream);
-                var provider = new AssetBundleResourcesProvider("@KevinsClassics", bundle);
+                var provider = new AssetBundleResourcesProvider("@KevinsAdditions", bundle);
                 ResourcesAPI.AddProvider(provider);
             }
             cfgFile = new ConfigFile(Path.Combine(Paths.ConfigPath, ModGuid + ".cfg"), true);
 
-            masterItemList = ItemBoilerplate.InitAll("KevinsClassics");
-            foreach (ItemBoilerplate x in masterItemList)
+            masterItemList = T2Module.InitAll<CatalogBoilerplate>(new T2Module.ModInfo 
             {
-                x.SetupConfig(cfgFile);
-            }
+                displayName = "Kevin's Additional Items",
+                longIdentifier = "KevinsAdditions",
+                shortIdentifier = "KAI",
+                mainConfigFile = cfgFile
+            });
 
-            int longestName = 0;
-            foreach (ItemBoilerplate x in masterItemList)
-            {
-                x.SetupAttributes("KEVINSCLASSICS", "KC");
-                if (x.itemCodeName.Length > longestName) longestName = x.itemCodeName.Length;
-            }
-
-            Logger.LogMessage("Index dump follows (pairs of name / index):");
-            foreach (ItemBoilerplate x in masterItemList)
-            {
-                if (x is Equipment eqp)
-                    Logger.LogMessage("Equipment KC" + x.itemCodeName.PadRight(longestName) + " / " + ((int)eqp.regIndex).ToString());
-                else if (x is Item item)
-                    Logger.LogMessage("     Item KC" + x.itemCodeName.PadRight(longestName) + " / " + ((int)item.regIndex).ToString());
-                else if (x is Artifact afct)
-                    Logger.LogMessage(" Artifact KC" + x.itemCodeName.PadRight(longestName) + " / " + ((int)afct.regIndex).ToString());
-                else
-                    Logger.LogMessage("    Other KC" + x.itemCodeName.PadRight(longestName) + " / N/A");
-            }
-
-            foreach (ItemBoilerplate x in masterItemList)
-            {
-                x.SetupBehavior();
-            }
-
+            T2Module.SetupAll_PluginAwake(masterItemList);
         }
+
+        private void Start()
+        {
+            T2Module.SetupAll_PluginStart(masterItemList);
+            CatalogBoilerplate.ConsoleDump(Logger, masterItemList);
+        }
+
     }
 }
