@@ -1,16 +1,12 @@
-﻿using EntityStates;
+﻿using Mono.Cecil.Cil;
+using MonoMod.Cil;
 using RoR2;
+using RoR2.Projectile;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using TILER2;
 using UnityEngine;
-using MonoMod.Cil;
-using Mono.Cecil;
-using Mono.Cecil.Cil;
-using System.Collections.Generic;
-using Rewired.ComponentControls.Effects;
-using RoR2.Projectile;
 
 namespace KevinfromHP.KevinsAdditions
 {
@@ -23,11 +19,12 @@ namespace KevinfromHP.KevinsAdditions
         [AutoConfigUpdateActions(AutoConfigUpdateActionTypes.InvalidateLanguage)]
         [AutoConfig("Amount each stack increases projectile speed by.", AutoConfigFlags.PreventNetMismatch, 0f, 1f)]
         public float projectileSpeed { get; private set; } = 0.2f;
+
+
         protected override string GetNameString(string langid = null) => displayName;
         protected override string GetPickupString(string langid = null) => "Reduces recoil, increases projectile speed, and increases accuracy.";
         protected override string GetDescString(string langid = null) => "Reduces <style=cIsUtility>recoil</style> reciprocally <style=cStack>(recoil intensity ÷ stack amount)</style>, increases <style=cIsUtility>projectile speed by " + (int)(projectileSpeed * 100) + "%</style> <style=cStack>(+" + (int)(projectileSpeed * 100) + "% per stack)</style>, and <style=cIsUtility>aim correction</style>. Aim correction field is in the shape of a parabola <style=cStack>(15x^2 ÷ stack amount)</style>.";
         protected override string GetLoreString(string langid = null) => "Add the fuckinnn lore here also the credits n stuff";
-
 
         public SeekingStone()
         {
@@ -40,28 +37,31 @@ namespace KevinfromHP.KevinsAdditions
         {
             base.Install();
 
-            On.RoR2.CharacterBody.OnInventoryChanged += GetItemCount;
             On.EntityStates.BaseState.AddRecoil += ReduceRecoil;
             On.RoR2.CharacterBody.AddSpreadBloom += ReduceSpread;
             On.RoR2.Projectile.ProjectileManager.InitializeProjectile += IncreaseVelocity;
+            On.RoR2.CharacterBody.OnInventoryChanged += GetItemCount;
         }
 
         public override void Uninstall()
         {
             base.Uninstall();
 
-            On.RoR2.CharacterBody.OnInventoryChanged -= GetItemCount;
             On.EntityStates.BaseState.AddRecoil -= ReduceRecoil;
             On.RoR2.CharacterBody.AddSpreadBloom -= ReduceSpread;
             On.RoR2.Projectile.ProjectileManager.InitializeProjectile -= IncreaseVelocity;
+            On.RoR2.CharacterBody.OnInventoryChanged -= GetItemCount;
         }
 
         private void GetItemCount(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self) //Checks item count and caches it. Also where the component is added
         {
             orig(self);
-            SeekingStoneComponent cpt = self.gameObject.GetComponent<SeekingStoneComponent>();
-            if (!cpt) cpt = self.gameObject.AddComponent<SeekingStoneComponent>();
-            cpt.cachedIcnt = GetCount(self);
+            if (GetCount(self) > 0 || self.gameObject.GetComponent<SeekingStoneComponent>())
+            {
+                SeekingStoneComponent cpt = self.gameObject.GetComponent<SeekingStoneComponent>();
+                if (!cpt) cpt = self.gameObject.AddComponent<SeekingStoneComponent>();
+                cpt.cachedIcnt = GetCount(self);
+            }
         }
 
         private void ReduceRecoil(On.EntityStates.BaseState.orig_AddRecoil orig, EntityStates.BaseState self, float verticalMin, float verticalMax, float horizontalMin, float horizontalMax)
@@ -93,7 +93,7 @@ namespace KevinfromHP.KevinsAdditions
             ProjectileSimple component5 = gameObject.GetComponent<ProjectileSimple>();
             projectileController.Networkowner = fireProjectileInfo.owner;
             SeekingStoneComponent cpt = fireProjectileInfo.owner.GetComponent<SeekingStoneComponent>();
-            if (cpt && cpt.cachedIcnt > 0)
+            if (component5 && cpt && cpt.cachedIcnt > 0)
                 component5.velocity *= 1f + cpt.cachedIcnt * projectileSpeed;
         }
 

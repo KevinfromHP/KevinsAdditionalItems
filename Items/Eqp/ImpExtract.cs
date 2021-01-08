@@ -1,21 +1,14 @@
-﻿using RoR2;
-using RoR2.UI;
-using UnityEngine;
-using System;
+﻿using R2API;
+using RoR2;
 using System.Collections;
-using System.Globalization;
 using TILER2;
+using UnityEngine;
 using UnityEngine.Networking;
-using R2API;
 using static TILER2.StatHooks;
-using MonoMod.Cil;
-using Mono.Cecil.Cil;
-using System.Threading;
-using System.Linq.Expressions;
-
 
 /*----------------------------------------TO DO----------------------------------------
  * Better controls in Imp mode (Is this even reasonably possible?)
+ * Looked into it, yes it is.
  */
 
 namespace KevinfromHP.KevinsAdditions
@@ -29,6 +22,8 @@ namespace KevinfromHP.KevinsAdditions
         public float duration { get; private set; } = 15f;
 
         public BuffIndex ImpExtractBuff { get; private set; }
+        private bool ilFailed = false;
+
 
         public override float cooldown { get; protected set; } = 100f;
         protected override string GetNameString(string langid = null) => displayName;
@@ -41,7 +36,7 @@ namespace KevinfromHP.KevinsAdditions
             "\n\n...And it's like that \"something\" hates me." +
             "\n\t(Lore by Keroro1454)";
 
-        public string key;
+        //public static bool assignedComponent = false;
 
         public ImpExtract()
         {
@@ -52,7 +47,7 @@ namespace KevinfromHP.KevinsAdditions
         public override void SetupAttributes()
         {
             base.SetupAttributes();
-            var ImpExtractBuffDef = new R2API.CustomBuff(new BuffDef
+            var ImpExtractBuffDef = new CustomBuff(new BuffDef
             {
                 buffColor = Color.white,
                 canStack = false,
@@ -70,8 +65,6 @@ namespace KevinfromHP.KevinsAdditions
             base.Install();
 
             GetStatCoefficients += Evt_TILER2GetStatCoefficients;
-            if (key == null)
-                On.RoR2.UI.ContextManager.Awake += On_DrawHUD;
             On.RoR2.CharacterBody.RemoveBuff += On_BuffEnd;
             On.RoR2.Stage.RespawnCharacter += On_NextStage;
             On.RoR2.CharacterMaster.OnBodyDeath += On_Death;
@@ -83,7 +76,6 @@ namespace KevinfromHP.KevinsAdditions
             base.Uninstall();
 
             GetStatCoefficients -= Evt_TILER2GetStatCoefficients;
-            On.RoR2.UI.ContextManager.Awake -= On_DrawHUD;
             On.RoR2.CharacterBody.RemoveBuff -= On_BuffEnd;
             On.RoR2.Stage.RespawnCharacter -= On_NextStage;
             On.RoR2.CharacterMaster.OnBodyDeath -= On_Death;
@@ -97,86 +89,29 @@ namespace KevinfromHP.KevinsAdditions
             if (sender.HasBuff(ImpExtractBuff))
             {
                 args.healthMultAdd -= .75f;
-                args.damageMultAdd += .4f;
+                args.damageMultAdd += .45f;
             }
         }
 
-        //-----------------------------------------------
-
-        private void On_DrawHUD(On.RoR2.UI.ContextManager.orig_Awake orig, ContextManager self)
-        {
-            orig(self);
-            key = Glyphs.GetGlyphString(self.eventSystemLocator, "Interact").ToLower();
-        }
-
-        //-----------------------------------------------
-
-        private void IL_DrawHUD(ILContext il)
-        {
-            var c = new ILCursor(il);
-
-
-            int locThis = -1;
-            int locGlyph = -1;
-            c.TryGotoNext(
-            x => x.MatchLdarg(out locThis),
-            x => x.MatchLdfld<ContextManager>("glyphTMP"),
-            x => x.MatchLdloc(out locGlyph),
-            x => x.MatchCallOrCallvirt("TMPro.TMP_Text", "set_text"));
-
-            c.Emit(OpCodes.Ldarg, locThis);
-            c.Emit(OpCodes.Ldloc, locGlyph);
-            c.EmitDelegate<Func<ContextManager, string, string>>((argThis, glyph) =>
-            {
-                return "<style=cKeyBinding>" + key.ToUpper() + "</style>"; //string.Format(CultureInfo.InvariantCulture, " < style=cKeyBinding>{0}</style>", key.ToUpper());
-            });
-            c.Emit(OpCodes.Stloc, locGlyph);
-
-
-            int locDesc = -1;
-            c.TryGotoNext(
-             x => x.MatchLdarg(out locThis),
-             x => x.MatchLdfld<ContextManager>("descriptionTMP"),
-             x => x.MatchLdloc(out locDesc),
-             x => x.MatchCallOrCallvirt("TMPro.TMP_Text", "set_text"));
-
-            c.Emit(OpCodes.Ldarg, locThis);
-            c.Emit(OpCodes.Ldloc, locDesc);
-            c.EmitDelegate<Func<ContextManager, string, string>>((argThis, desc) =>
-            {
-                return "<style=cKeyBinding>" + key.ToUpper() + "</style> Revert Form";
-            });
-            c.Emit(OpCodes.Stloc, locDesc);
-
-
-            int locActive = -1;
-            c.TryGotoNext(
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<ContextManager>("contextDisplay"),
-            x => x.MatchLdloc(out locActive),
-            x => x.MatchCallOrCallvirt<GameObject>("SetActive"));
-
-            c.Emit(OpCodes.Ldarg, locThis);
-            c.Emit(OpCodes.Ldloc, locActive);
-            c.EmitDelegate<Func<ContextManager, bool, bool>>((argThis, active) =>
-            {
-                active = true;
-                return active;
-            });
-            c.Emit(OpCodes.Stloc, locActive);
-        }
 
         //-----------------------------------------------
 
         protected override bool PerformEquipmentAction(EquipmentSlot slot)
         {
+            /*foreach (NetworkUser networkUser in NetworkUser.instancesList)
+            {
+                CharacterMaster networkMaster = networkUser.master;
+                var netCpt = networkMaster.gameObject.AddComponent<ImpExtractComponent>();
+                netCpt.GetVars(ImpExtractBuff);
+            }*/
             CharacterBody sbdy = slot.characterBody;
             if (sbdy == null) return false;
             CharacterMaster master = sbdy.master;
-            if (master.lostBodyToDeath) return false; //Testing this
+            if (master.lostBodyToDeath) return false;
             var cpt = master.gameObject.GetComponent<ImpExtractComponent>();
             if (!cpt) cpt = master.gameObject.AddComponent<ImpExtractComponent>();
-            for (int i = 0; i < sbdy.timedBuffs.Count; i++)
+            cpt.buff = ImpExtractBuff;
+            for (int i = 0; i < sbdy.timedBuffs.Count; i++) // checks to see if they already have the buff. If so, just renew it instead of respawning.
             {
                 if (sbdy.timedBuffs[i].buffIndex == ImpExtractBuff)
                 {
@@ -184,10 +119,7 @@ namespace KevinfromHP.KevinsAdditions
                     return true;
                 }
             }
-            //cpt.origBody = BodyCatalog.FindBodyPrefab(BodyCatalog.GetBodyName(BodyCatalog.FindBodyIndex(sbdy))); //origBody is where the user's original bodyprefab is stored
-            cpt.GetVars(ImpExtractBuff, key);
             cpt.Transform(sbdy.master, ImpExtractBuff, duration);
-            IL.RoR2.UI.ContextManager.Update += IL_DrawHUD;
             return true;
         }
 
@@ -199,7 +131,7 @@ namespace KevinfromHP.KevinsAdditions
             if (bufftype.Equals(ImpExtractBuff))
             {
                 self.masterObject.GetComponent<ImpExtractComponent>().RemoveImp(true);
-                IL.RoR2.UI.ContextManager.Update -= IL_DrawHUD;
+                //IL.RoR2.UI.ContextManager.Update -= IL_DrawHUD;
             }
         }
         private void On_NextStage(On.RoR2.Stage.orig_RespawnCharacter orig, Stage self, CharacterMaster characterMaster) //returns to original body prefab when spawning into a stage
@@ -211,19 +143,21 @@ namespace KevinfromHP.KevinsAdditions
             if (self.gameObject.GetComponent<ImpExtractComponent>() != null && self.gameObject.GetComponent<ImpExtractComponent>().isImp)
             {
                 self.gameObject.GetComponent<ImpExtractComponent>().RemoveImp(false);
-                IL.RoR2.UI.ContextManager.Update -= IL_DrawHUD;
+                //IL.RoR2.UI.ContextManager.Update -= IL_DrawHUD;
             }
             orig(self, characterMaster);
         }
         private void On_Death(On.RoR2.CharacterMaster.orig_OnBodyDeath orig, CharacterMaster self, CharacterBody body) //returns to original body prefab after dying
         {
             if (NetworkServer.active)
+            {
                 if (self.gameObject.GetComponent<ImpExtractComponent>() != null && self.gameObject.GetComponent<ImpExtractComponent>().isImp)
                 {
                     //if (self.inventory.GetItemCount(ItemIndex.ExtraLife) == 0)
                     self.gameObject.GetComponent<ImpExtractComponent>().RemoveImp(false);
-                    IL.RoR2.UI.ContextManager.Update -= IL_DrawHUD;
+                    //IL.RoR2.UI.ContextManager.Update -= IL_DrawHUD;
                 }
+            }
             orig(self, body);
         }
         private void On_GameOver(On.RoR2.Run.orig_BeginGameOver orig, Run self, GameEndingDef gameEndingDef) //goes to original body prefab on gameover
@@ -235,13 +169,11 @@ namespace KevinfromHP.KevinsAdditions
                     if (networkUser.masterObject.GetComponent<ImpExtractComponent>() != null && networkUser.masterObject.GetComponent<ImpExtractComponent>().isImp)
                     {
                         networkUser.masterObject.GetComponent<ImpExtractComponent>().RemoveImp(false);
-                        IL.RoR2.UI.ContextManager.Update -= IL_DrawHUD;
+                        //IL.RoR2.UI.ContextManager.Update -= IL_DrawHUD;
                     }
             }
             orig(self, gameEndingDef);
         }
-
-
     }
 
 
@@ -252,8 +184,7 @@ namespace KevinfromHP.KevinsAdditions
 
     public class ImpExtractComponent : MonoBehaviour
     {
-        public GameObject origBody = null; //Where a user's original bodyprefab is stored
-        public string key;
+        public GameObject origBodyPrefab; //Where a user's original bodyprefab is stored
         public BuffIndex buff;
         public CharacterMaster master;
         public bool isImp;
@@ -262,9 +193,8 @@ namespace KevinfromHP.KevinsAdditions
         float health;
         float barrier;
 
-        public void GetVars(BuffIndex buff, string key)
+        public void GetVars(BuffIndex buff)
         {
-            this.key = key;
             this.buff = buff;
         }
 
@@ -281,13 +211,13 @@ namespace KevinfromHP.KevinsAdditions
             barrier = body.healthComponent.barrier;
             yield return new WaitForEndOfFrame();
 
-            NetworkInstanceId origbodyid = master.bodyInstanceId;
-            master.bodyPrefab = BodyCatalog.FindBodyPrefab("ImpBossBody");
+            master.bodyPrefab = BodyCatalog.FindBodyPrefab("ImpBossPlayerBody");
             master.Respawn(body.transform.position, body.transform.rotation, false);
-            master.bodyInstanceId = origbodyid;
             body = master.GetBody();
+
             body.AddTimedBuff(buff, duration);
-            isImp = true;
+            //isImp = true;
+
             StartCoroutine(HealthMod(true));
         }
 
@@ -295,9 +225,7 @@ namespace KevinfromHP.KevinsAdditions
         {
             CharacterBody body = master.GetBody();
             barrier = body.healthComponent.barrier / body.maxBarrier;
-            NetworkInstanceId origbodyid = master.bodyInstanceId;
-            master.bodyPrefab = BodyCatalog.FindBodyPrefab(origBody);
-            master.bodyInstanceId = origbodyid;
+            master.bodyPrefab = origBodyPrefab;
             if (respawn)
             {
                 master.Respawn(body.transform.position, body.transform.rotation, false);
@@ -327,22 +255,14 @@ namespace KevinfromHP.KevinsAdditions
         {
             frame = 0;
             isImp = false;
+            count = false;
             master = gameObject.GetComponent<CharacterMaster>();
-            origBody = BodyCatalog.FindBodyPrefab(master.GetBodyObject()); //origBody is where the user's original bodyprefab is stored
+            origBodyPrefab = BodyCatalog.FindBodyPrefab(master.GetBodyObject()); //origBody is where the user's original bodyprefab is stored
         }
         public void Update()
         {
             if (count) frame++;
             else frame = 0;
-            if (master && isImp)
-            {
-                bool i3 = Input.GetKeyDown(key);
-                if (i3)
-                {
-                    master.GetBody().ClearTimedBuffs(buff);
-                    isImp = false;
-                }
-            }
         }
     }
 }

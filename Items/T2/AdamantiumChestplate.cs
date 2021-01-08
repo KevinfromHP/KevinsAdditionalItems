@@ -14,6 +14,8 @@ namespace KevinfromHP.KevinsAdditions
         [AutoConfigUpdateActions(AutoConfigUpdateActionTypes.InvalidateLanguage)]
         [AutoConfig("How much armor each item gives", AutoConfigFlags.PreventNetMismatch, 0f, float.MaxValue)]
         public float armorAdd { get; private set; } = 15f;
+
+
         protected override string GetNameString(string langid = null) => displayName;
         protected override string GetPickupString(string langid = null) => "Gain " + armorAdd + " armor.";
         protected override string GetDescString(string langid = null) => "Gain " + armorAdd + " <style=cIsUtility>armor</style> <style=cStack>(+" + armorAdd + " per stack)</style>.";
@@ -46,7 +48,7 @@ namespace KevinfromHP.KevinsAdditions
 
         private void Evt_TILER2GetStatCoefficients(CharacterBody sender, StatHookEventArgs args)
         {
-            var icnt = GetCount(sender.inventory);
+            var icnt = GetCount(sender);
             args.armorAdd += icnt * armorAdd;
 
         }

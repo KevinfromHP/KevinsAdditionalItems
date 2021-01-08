@@ -1,13 +1,15 @@
-﻿using RoR2;
-using UnityEngine;
+﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using Mono.Cecil.Cil;
+using RoR2;
 using System;
 using System.Collections.ObjectModel;
 using TILER2;
-using static TILER2.MiscUtil;
-using Mono.Cecil;
-using R2API.Utils;
+using UnityEngine;
+
+
+/* Notes:
+ * There may be a way to implement the regen through TILER2
+ */
 
 namespace KevinfromHP.KevinsAdditions
 {
@@ -26,7 +28,7 @@ namespace KevinfromHP.KevinsAdditions
 
         protected override string GetNameString(string langid = null) => displayName;
         protected override string GetPickupString(string langid = null) => "Base Health Regen scales with current movement speed. \n<style=cDeath>Cannot heal through other means.</style>";
-        protected override string GetDescString(string langid = null) => "";
+        protected override string GetDescString(string langid = null) => "Base Health Regen scales with current movement speed. \n<style=cDeath>Cannot heal through other means.</style>";
         protected override string GetLoreString(string langid = null) => "-Profile: 098 - \"Primordial Flesh\"- \n-Test Subject Name: XXXXXXXXXX-" +
             "\n\n-Test 01: First/Second/Third Degree Burns across 92% of the body-" +
             "\n-Results: Wounds all healed from the body, right down to the dead cells recovering back to their prior state-" +
@@ -49,17 +51,22 @@ namespace KevinfromHP.KevinsAdditions
         {
             base.Install();
 
+            IL.RoR2.CharacterBody.RecalculateStats += IL_SetHealthRegen;
+            IL.RoR2.HealthComponent.Heal += IL_ManageHeals;
+            if(ilFailed)
+            {
+                IL.RoR2.CharacterBody.RecalculateStats -= IL_SetHealthRegen;
+                IL.RoR2.HealthComponent.Heal -= IL_ManageHeals;
+            }
             On.RoR2.CharacterBody.OnInventoryChanged += GetItemCount;
-            IL.RoR2.CharacterBody.RecalculateStats += SetHealthRegen;
-            IL.RoR2.HealthComponent.Heal += ManageHeals;
         }
         public override void Uninstall()
         {
             base.Uninstall();
 
+            IL.RoR2.CharacterBody.RecalculateStats -= IL_SetHealthRegen;
+            IL.RoR2.HealthComponent.Heal -= IL_ManageHeals;
             On.RoR2.CharacterBody.OnInventoryChanged -= GetItemCount;
-            IL.RoR2.CharacterBody.RecalculateStats -= SetHealthRegen;
-            IL.RoR2.HealthComponent.Heal -= ManageHeals;
         }
 
         private void GetItemCount(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self)
@@ -70,7 +77,7 @@ namespace KevinfromHP.KevinsAdditions
             cpt.cachedIcnt = GetCount(self);
         }
 
-        private void SetHealthRegen(ILContext il)
+        private void IL_SetHealthRegen(ILContext il)
         {
             /* numbers not needed in the regen calc
              * num42 = Cautious Slug
@@ -137,7 +144,7 @@ namespace KevinfromHP.KevinsAdditions
             });
         }
 
-        private void ManageHeals(ILContext il) /*cancels out anything like bustling fungus or medkit*/
+        private void IL_ManageHeals(ILContext il) /*cancels out anything like bustling fungus or medkit*/
         {
             ILCursor c = new ILCursor(il);
             bool ILFound;

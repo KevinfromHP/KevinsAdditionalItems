@@ -1,12 +1,11 @@
-﻿using RoR2;
-using UnityEngine;
-using MonoMod.Cil;
+﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using MonoMod.Cil;
+using RoR2;
 using System;
 using System.Collections.ObjectModel;
 using TILER2;
-using static TILER2.MiscUtil;
-using Mono.Cecil;
+using UnityEngine;
 
 namespace KevinfromHP.KevinsAdditions
 {
@@ -65,22 +64,23 @@ namespace KevinfromHP.KevinsAdditions
         {
             base.Install();
 
-            On.RoR2.CharacterBody.OnInventoryChanged += GetItemCount;
-            IL.RoR2.BulletAttack.DefaultHitCallback += IL_CBDefaultHitCallback;
             IL.RoR2.HealthComponent.TakeDamage += IL_CBTakeDamage;
+            IL.RoR2.BulletAttack.DefaultHitCallback += IL_CBDefaultHitCallback;
             if (ilFailed)
             {
                 IL.RoR2.BulletAttack.DefaultHitCallback -= IL_CBDefaultHitCallback;
                 IL.RoR2.HealthComponent.TakeDamage -= IL_CBTakeDamage;
             }
+            else
+                On.RoR2.CharacterBody.OnInventoryChanged += GetItemCount;
         }
         public override void Uninstall()
         {
             base.Uninstall();
 
-            On.RoR2.CharacterBody.OnInventoryChanged -= GetItemCount;
-            IL.RoR2.BulletAttack.DefaultHitCallback -= IL_CBDefaultHitCallback;
             IL.RoR2.HealthComponent.TakeDamage -= IL_CBTakeDamage;
+            IL.RoR2.BulletAttack.DefaultHitCallback -= IL_CBDefaultHitCallback;
+            On.RoR2.CharacterBody.OnInventoryChanged -= GetItemCount;
         }
 
         private void GetItemCount(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self)

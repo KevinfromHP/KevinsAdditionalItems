@@ -13,8 +13,10 @@ Special thanks to Nebulon for making the icons and models used!
 
 * Imp Extract - Equipment
 	* Transform into an Imp Overlord and wreak havoc for a period of time.
-	* (May have compatibility issues with Kingrinyov's content. DM me on Discord if anyone confirms this, pls.)
-	* NOTE: I am currently aware that this item only works on the host. I will try to get that fixed, though :).
+	* *Primary Skill* - Void Spikes
+	* *Secondary Skill* - Ground Pound
+	* *Utility Skill* - Blink
+	* *Special Skill* - Revert Form
 * Artemis' Blessing - Lunar
 	* Increases damage the further you are from a target. Decreases damage the closer you are to a target.
 	* Based off a median range (point where damage output is unaffected) that can be configured in the config.
@@ -32,13 +34,20 @@ Special thanks to Nebulon for making the icons and models used!
 
 ## Changelog
 
+* 3.5.11 -
+	* Imp Extract Re-implemented; now functions perfectly in multiplayer
+	* Fixed a few Seeking Stone issues
+
+* 3.5.10 - 
+	* Disabled Imp Extract due to concerns of lag in late-game playthroughs, especially in multiplayer.
+
 * 3.5.9 - Hey everyone still using this mod! For the past two or so months I have been busy graduating high school, but I'm completely done now! My focus can now shift back to my personal projects. I figured I might as well get something out during this update, though. There are two new items in this one, but their art and such has not been completely finished. As usual, please report any bugs with these to me on the ROR2 modding discord.
 	* Updated for 1.0.3.1
 	* Switched to use Item_V2 in the 3.0 version of TILER2
 	* Uncommon Item "Seeking Stone" released (some art missing)
-	* Lunar Item "Primordial Flesh" released (all art missing)
-	* Adamantium Chestplate default armor value increased to 15.
-	* Switched out low-poly model of Imp Extract for the HD one; changed shaders for it.
+	* Lunar Item "Primordial Flesh" released (all art missing). Thanks to Skyline222 for the idea!
+	* Adamantium Chestplate default armor value increased to 15
+	* Switched out low-poly model of Imp Extract for the HD one; changed shaders for it
 	* Minor Changes
 
 * 2.4.8 -
@@ -69,7 +78,6 @@ Special thanks to Nebulon for making the icons and models used!
 
 ## To Do
 
-* Imp Extract only works for host (singleplayer-only).
 * Lunar Item Primordial Flesh coded, requires model and icon
 * Lunar Item Seeking Stone coded, requires icon
 * May remaster the model for Artemis' Blesing, will DEFINITELY remaster icon for Artemis' Blessing

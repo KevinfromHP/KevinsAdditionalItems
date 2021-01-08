@@ -1,14 +1,17 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using R2API;
 using R2API.Utils;
 using RoR2;
+using RoR2.Skills;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
-using UnityEngine;
-using BepInEx.Configuration;
-using Path = System.IO.Path;
 using TILER2;
+using UnityEngine;
 using static TILER2.MiscUtil;
+using Path = System.IO.Path;
+
 
 namespace KevinfromHP.KevinsAdditions
 {
@@ -24,7 +27,7 @@ namespace KevinfromHP.KevinsAdditions
 #if DEBUG
                 "0." +
 #endif
-            "3.5.9";
+            "3.5.11";
         public const string ModName = "KevinsAdditions";
         public const string ModGuid = "com.KevinfromHP.KevinsAdditions";
 
@@ -59,18 +62,22 @@ namespace KevinfromHP.KevinsAdditions
 
         private void Awake()
         {
+#if DEBUG
+            On.RoR2.Networking.GameNetworkManager.OnClientConnect += (self, user, t) => { };
+#endif
             _logger = Logger;
 
             Logger.LogDebug("Loading assets...");
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("KevinsAdditions.kevinsadditions_assets"))
+            /*using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("KevinsAdditions.kevinsadditions_assets"))
             {
                 var bundle = AssetBundle.LoadFromStream(stream);
                 var provider = new AssetBundleResourcesProvider("@KevinsAdditions", bundle);
                 ResourcesAPI.AddProvider(provider);
-            }
+            }*/
+            ResourcesAPI.AddProvider(Assets.PopulateAssets());
             cfgFile = new ConfigFile(Path.Combine(Paths.ConfigPath, ModGuid + ".cfg"), true);
 
-            masterItemList = T2Module.InitAll<CatalogBoilerplate>(new T2Module.ModInfo 
+            masterItemList = T2Module.InitAll<CatalogBoilerplate>(new T2Module.ModInfo
             {
                 displayName = "Kevin's Additional Items",
                 longIdentifier = "KevinsAdditions",
@@ -79,6 +86,9 @@ namespace KevinfromHP.KevinsAdditions
             });
 
             T2Module.SetupAll_PluginAwake(masterItemList);
+
+            Logger.LogDebug("Adding Imp Mechanics...");
+            ImpPlayerAdjustments.AddExtras();
         }
 
         private void Start()
@@ -86,6 +96,49 @@ namespace KevinfromHP.KevinsAdditions
             T2Module.SetupAll_PluginStart(masterItemList);
             CatalogBoilerplate.ConsoleDump(Logger, masterItemList);
         }
+    }
+    public static class Assets
+    {
+        public static AssetBundle MainAssetBundle = null;
+        public static AssetBundleResourcesProvider Provider;
 
+        public static Texture charPortrait;
+
+        public static Sprite iconP;
+        public static Sprite icon1;
+        public static Sprite icon2;
+        public static Sprite icon3;
+        public static Sprite icon4;
+
+        public static IResourceProvider PopulateAssets()
+        {
+            if (MainAssetBundle == null)
+            {
+                using (var assetStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("KevinsAdditions.kevinsadditions_assets"))
+                {
+                    MainAssetBundle = AssetBundle.LoadFromStream(assetStream);
+                    Provider = new AssetBundleResourcesProvider("@KevinsAdditions", MainAssetBundle);
+                }
+            }
+
+            // include this if you're using a custom soundbank
+            /*using (Stream manifestResourceStream2 = Assembly.GetExecutingAssembly().GetManifestResourceStream("ExampleSurvivor.ExampleSurvivor.bnk"))
+            {
+                byte[] array = new byte[manifestResourceStream2.Length];
+                manifestResourceStream2.Read(array, 0, array.Length);
+                SoundAPI.SoundBanks.Add(array);
+            }*/
+
+            // and now we gather the assets
+            //charPortrait = MainAssetBundle.LoadAsset<Sprite>("ExampleSurvivorBody").texture;
+
+            iconP = MainAssetBundle.LoadAsset<Sprite>("@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon");
+            icon1 = MainAssetBundle.LoadAsset<Sprite>("@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon");
+            icon2 = MainAssetBundle.LoadAsset<Sprite>("@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon");
+            icon3 = MainAssetBundle.LoadAsset<Sprite>("@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon");
+            icon4 = MainAssetBundle.LoadAsset<Sprite>("@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon");
+
+            return Provider;
+        }
     }
 }
