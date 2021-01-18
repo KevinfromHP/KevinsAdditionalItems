@@ -41,7 +41,7 @@ Special thanks to Nebulon for making the icons and models used!
 	* Seeking Stone has received a new model and icon
 	* Seeking Stone made into a Tier 3 item
 	* Seeking Stone aim field has been buffed
-	* Seeking Stone no longer increases projectile velocity; Replaced with a "heat seeking" function
+	* Seeking Stone no longer increases projectile velocity; replaced with a "heat seeking" function
 	* Imp Extract Skill overlap disabled
 	* Imp Extract no longer uses two equipment stock
 	* Cleaned up performance
