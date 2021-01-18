@@ -5,7 +5,10 @@ using TILER2;
 using UnityEngine;
 using UnityEngine.Networking;
 using static TILER2.StatHooks;
-
+using KevinfromHP.KevinsAdditions;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
+using System;
 /*----------------------------------------TO DO----------------------------------------
  * Better controls in Imp mode (Is this even reasonably possible?)
  * Looked into it, yes it is.
@@ -22,22 +25,25 @@ namespace KevinfromHP.KevinsAdditions
         public float duration { get; private set; } = 15f;
 
         public BuffIndex ImpExtractBuff { get; private set; }
-        private bool ilFailed = false;
 
+        private bool ilFailed = false;
 
         public override float cooldown { get; protected set; } = 100f;
         protected override string GetNameString(string langid = null) => displayName;
         protected override string GetPickupString(string langid = null) => "Transform into an Imp Overlord for " + duration + " seconds.";
         protected override string GetDescString(string langid = null) => "<style=cIsDamage>Transform</style> into an <style=cDeath>Imp Overlord</style> for <style=cIsUtility>" + duration + "</style> seconds. Damage increased by <style=cIsDamage>40%</style> while active.";
-        protected override string GetLoreString(string langid = null) => "Order: Crux Brand Silly Red Seltzer! \nNumber: 09** \nEstimated Delivery: 04/12/2056 \nShipping Method: High Priority/Fragile \nShipping Address: Crux Fairgrounds, Tent 1, Earth \nShipping Details:" +
-            "\n\nVeril-" +
+
+        string deviceName = "<style=cIsHealth>Crux Brand Silly Red Seltzer!</style>";
+        string estimatedDelivery = "04/12/2056";
+        string sentTo = "Crux Fairgrounds, Tent 1, Earth";
+        string trackingNumber = "09**";
+        string shippingMethod = "High Priority/Fragile";
+        string orderDetails = "\n\nVeril-" +
             "\n\nI did exactly as you said, even used the stupid little bottle you sent me. Mehri doesn't suspect a thing, and they certainly won't notice a bit of this gunk missing. I expect my payment, in full, for pulling this off, and don't think I forgot the extra you promised if I got it in the bottle. " +
             "I don't understand why you or your weird little gang want this stuff, though. It's so gross, and...well, I can't quite describe it, but I feel wrong whenever I'm around it. As if \"something\" is watching me..." +
             "\n\n...And it's like that \"something\" hates me." +
-            "\n\t(Lore by Keroro1454)";
-
-        //public static bool assignedComponent = false;
-
+            "\n\n\t<style=cStack>(Lore by</style> <style=cIsUtility>Keroro1454</style><style=cStack>)</style>";
+        protected override string GetLoreString(string langid = null) => KevinsAdditionsPlugin.OrderManifestLoreFormatter(deviceName, estimatedDelivery, sentTo, trackingNumber, shippingMethod, orderDetails);
         public ImpExtract()
         {
             modelResourcePath = "@KevinsAdditions:Assets/KevinsAdditions/prefabs/ImpExtract.prefab";
@@ -64,20 +70,25 @@ namespace KevinfromHP.KevinsAdditions
         {
             base.Install();
 
-            GetStatCoefficients += Evt_TILER2GetStatCoefficients;
-            On.RoR2.CharacterBody.RemoveBuff += On_BuffEnd;
-            On.RoR2.Stage.RespawnCharacter += On_NextStage;
-            On.RoR2.CharacterMaster.OnBodyDeath += On_Death;
-            On.RoR2.Run.BeginGameOver += On_GameOver;
+            IL.RoR2.Stage.RespawnCharacter += IL_NextStage;
+            if (ilFailed)
+                IL.RoR2.Stage.RespawnCharacter -= IL_NextStage;
+            else
+            {
+                GetStatCoefficients += Evt_TILER2GetStatCoefficients;
+                On.RoR2.CharacterBody.RemoveBuff += On_BuffEnd;
+                On.RoR2.CharacterMaster.OnBodyDeath += On_Death;
+                On.RoR2.Run.BeginGameOver += On_GameOver;
+            }
         }
 
         public override void Uninstall()
         {
             base.Uninstall();
 
+            IL.RoR2.Stage.RespawnCharacter -= IL_NextStage;
             GetStatCoefficients -= Evt_TILER2GetStatCoefficients;
             On.RoR2.CharacterBody.RemoveBuff -= On_BuffEnd;
-            On.RoR2.Stage.RespawnCharacter -= On_NextStage;
             On.RoR2.CharacterMaster.OnBodyDeath -= On_Death;
             On.RoR2.Run.BeginGameOver -= On_GameOver;
         }
@@ -96,14 +107,9 @@ namespace KevinfromHP.KevinsAdditions
 
         //-----------------------------------------------
 
+        //This is really weird. The first call has to return false because whenever you hold down the key for longer than a frame, it uses the equipment twice because of the characterbody switch. So, the first call (when they are still normal) returns false, and then it returns true when they are an imp (the call where it resets the timer)
         protected override bool PerformEquipmentAction(EquipmentSlot slot)
         {
-            /*foreach (NetworkUser networkUser in NetworkUser.instancesList)
-            {
-                CharacterMaster networkMaster = networkUser.master;
-                var netCpt = networkMaster.gameObject.AddComponent<ImpExtractComponent>();
-                netCpt.GetVars(ImpExtractBuff);
-            }*/
             CharacterBody sbdy = slot.characterBody;
             if (sbdy == null) return false;
             CharacterMaster master = sbdy.master;
@@ -111,16 +117,19 @@ namespace KevinfromHP.KevinsAdditions
             var cpt = master.gameObject.GetComponent<ImpExtractComponent>();
             if (!cpt) cpt = master.gameObject.AddComponent<ImpExtractComponent>();
             cpt.buff = ImpExtractBuff;
-            for (int i = 0; i < sbdy.timedBuffs.Count; i++) // checks to see if they already have the buff. If so, just renew it instead of respawning.
-            {
-                if (sbdy.timedBuffs[i].buffIndex == ImpExtractBuff)
+            if (cpt.isImp)
+                for (int i = 0; i < sbdy.timedBuffs.Count; i++) // checks to see if they already have the buff. If so, just renew it instead of respawning.
                 {
-                    sbdy.timedBuffs[i].timer = duration;
-                    return true;
+                    if (sbdy.timedBuffs[i].buffIndex == ImpExtractBuff)
+                    {
+                        sbdy.timedBuffs[i].timer = duration;
+                        return true;
+                    }
                 }
-            }
-            cpt.Transform(sbdy.master, ImpExtractBuff, duration);
-            return true;
+
+            cpt.BecomeImp(duration);
+            slot.characterBody = cpt.master.GetBody();
+            return false;
         }
 
         //-----------------------------------------------
@@ -134,29 +143,37 @@ namespace KevinfromHP.KevinsAdditions
                 //IL.RoR2.UI.ContextManager.Update -= IL_DrawHUD;
             }
         }
-        private void On_NextStage(On.RoR2.Stage.orig_RespawnCharacter orig, Stage self, CharacterMaster characterMaster) //returns to original body prefab when spawning into a stage
+        private void IL_NextStage(ILContext il) //returns to original body prefab when spawning into a stage
         {
-            if (!NetworkServer.active || !characterMaster)
+            var c = new ILCursor(il);
+            bool ILFound;
+
+
+
+            ILFound = c.TryGotoNext(
+                x => x.MatchLdarg(0),
+                x => x.MatchCallOrCallvirt<Stage>("GetPlayerSpawnTransform"),
+                x => x.MatchStloc(0));
+            if (!ILFound)
             {
+                ilFailed = true;
+                KevinsAdditionsPlugin._logger.LogError("Failed to apply Imp Extract IL patch (NextStage var read), item will not work; target instructions not found");
                 return;
             }
-            if (self.gameObject.GetComponent<ImpExtractComponent>() != null && self.gameObject.GetComponent<ImpExtractComponent>().isImp)
+
+            c.Emit(OpCodes.Ldarg_1);
+            c.EmitDelegate<Action<CharacterMaster>>((master) =>
             {
-                self.gameObject.GetComponent<ImpExtractComponent>().RemoveImp(false);
-                //IL.RoR2.UI.ContextManager.Update -= IL_DrawHUD;
-            }
-            orig(self, characterMaster);
+                if (master.gameObject.GetComponent<ImpExtractComponent>() ? master.gameObject.GetComponent<ImpExtractComponent>().isImp : false)
+                    master.gameObject.GetComponent<ImpExtractComponent>().RemoveImp(false);
+            });
         }
         private void On_Death(On.RoR2.CharacterMaster.orig_OnBodyDeath orig, CharacterMaster self, CharacterBody body) //returns to original body prefab after dying
         {
             if (NetworkServer.active)
             {
                 if (self.gameObject.GetComponent<ImpExtractComponent>() != null && self.gameObject.GetComponent<ImpExtractComponent>().isImp)
-                {
-                    //if (self.inventory.GetItemCount(ItemIndex.ExtraLife) == 0)
                     self.gameObject.GetComponent<ImpExtractComponent>().RemoveImp(false);
-                    //IL.RoR2.UI.ContextManager.Update -= IL_DrawHUD;
-                }
             }
             orig(self, body);
         }
@@ -167,10 +184,7 @@ namespace KevinfromHP.KevinsAdditions
                 NetworkUser networkUser = NetworkUser.readOnlyInstancesList[i];
                 if (networkUser && networkUser.isParticipating)
                     if (networkUser.masterObject.GetComponent<ImpExtractComponent>() != null && networkUser.masterObject.GetComponent<ImpExtractComponent>().isImp)
-                    {
                         networkUser.masterObject.GetComponent<ImpExtractComponent>().RemoveImp(false);
-                        //IL.RoR2.UI.ContextManager.Update -= IL_DrawHUD;
-                    }
             }
             orig(self, gameEndingDef);
         }
@@ -190,6 +204,7 @@ namespace KevinfromHP.KevinsAdditions
         public bool isImp;
         public bool count;
         public int frame; // counts to 2 frames then goes to 0
+        public bool canTransform = true;
         float health;
         float barrier;
 
@@ -200,25 +215,28 @@ namespace KevinfromHP.KevinsAdditions
 
         public void Transform(CharacterMaster master, BuffIndex buff, float duration)
         {
-            StartCoroutine(BecomeImp(buff, duration));
+            //StartCoroutine(BecomeImp(buff, duration));
+            BecomeImp(duration);
         }
 
-        public IEnumerator BecomeImp(BuffIndex buff, float duration)
+        public void /*IEnumerator*/ BecomeImp(/*BuffIndex buff, */float duration)
         {
             CharacterBody body = master.GetBody();
             health = body.healthComponent.health / body.maxHealth;
             if (health > 1f) health = 1f;
             barrier = body.healthComponent.barrier;
-            yield return new WaitForEndOfFrame();
 
             master.bodyPrefab = BodyCatalog.FindBodyPrefab("ImpBossPlayerBody");
             master.Respawn(body.transform.position, body.transform.rotation, false);
             body = master.GetBody();
+            //yield return new WaitForEndOfFrame();
 
             body.AddTimedBuff(buff, duration);
-            //isImp = true;
-
+            isImp = true;
+            canTransform = false;
             StartCoroutine(HealthMod(true));
+            //HealthMod(true);
+            canTransform = true;
         }
 
         public void RemoveImp(bool respawn)
@@ -226,6 +244,7 @@ namespace KevinfromHP.KevinsAdditions
             CharacterBody body = master.GetBody();
             barrier = body.healthComponent.barrier / body.maxBarrier;
             master.bodyPrefab = origBodyPrefab;
+            isImp = false;
             if (respawn)
             {
                 master.Respawn(body.transform.position, body.transform.rotation, false);

@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace KevinfromHP.KevinsAdditions
 {
-    public class ArtemisBlessing : Item_V2<ArtemisBlessing>
+    public class ArtemisBlessing : VirtItem_V2<ArtemisBlessing>
     {
         public override string displayName => "Artemis' Blessing";
         public override ItemTier itemTier => ItemTier.Lunar;
@@ -17,7 +17,7 @@ namespace KevinfromHP.KevinsAdditions
 
         [AutoConfigUpdateActions(AutoConfigUpdateActionTypes.InvalidateLanguage)]
         [AutoConfig("Median Distance from target (Point where damage is unaffected)", AutoConfigFlags.PreventNetMismatch, 0f, float.MaxValue)]
-        public float medDist { get; private set; } = 25f;
+        public float medDist { get; private set; } = 35f;
 
         [AutoConfigUpdateActions(AutoConfigUpdateActionTypes.InvalidateLanguage)]
         [AutoConfig("Minimum Damage from Distances closer than Median Range (Will continue to reduce if stacked!)", AutoConfigFlags.PreventNetMismatch, 0f, 1f)]
@@ -44,9 +44,9 @@ namespace KevinfromHP.KevinsAdditions
 
         //public BuffIndex ArtemisBlessingBuff { get; private set; }
         protected override string GetNameString(string langid = null) => displayName;
-        protected override string GetPickupString(string langid = null) => "The further you are, the more damage you do.\n<style=cDeath>Don't get too close, though...</style>";
+        protected override string GetPickupString(string langid = null) => "The further you are, the more damage you do. <style=cDeath>Damage Reduces the closer you are to a target.</style>";
         protected override string GetDescString(string langid = null) => "Damage increases by <style=cIsDamage>" + (int)(effectMult * 100) + "%</style> " + "<style=cStack>(+" + (int)(effectMult * 100) + "% per stack)</style> per <style=cIsUtility>meter</style> away from a target.\n" +
-            "<style=cDeath>Damage decreases by the same amount the closer your distance to a target.</style> Distance where damage output is unaffected is <style=cIsUtility>   " + (int)medDist + "m</style>.";
+            "<style=cDeath>Damage decreases by the same amount the closer your distance to a target.</style> Distance where damage output is unaffected is <style=cIsUtility>" + (int)medDist + "m</style>.";
         protected override string GetLoreString(string langid = null) => "My love! How I anguish to see you like this, laid out limp upon my arms. You, who was once so powerful, so full of life, he who could conquer any beast. To have been felled by such a devious trick of hers', the vile scorpion. It is such a crime the gods must avert their eyes in shame for allowing this to happen." +
             "\n\nBut you shall not be forgotten, doomed as a shade below for all eternity. I shall bless your body, and place you high in the skies, to glow with strength forever. Distant above even the gods, from far away you shall remind everyone of your power." +
             "\n\n - Inscription upon a club, found in an empty marble tomb" +
@@ -71,8 +71,6 @@ namespace KevinfromHP.KevinsAdditions
                 IL.RoR2.BulletAttack.DefaultHitCallback -= IL_CBDefaultHitCallback;
                 IL.RoR2.HealthComponent.TakeDamage -= IL_CBTakeDamage;
             }
-            else
-                On.RoR2.CharacterBody.OnInventoryChanged += GetItemCount;
         }
         public override void Uninstall()
         {
@@ -80,17 +78,18 @@ namespace KevinfromHP.KevinsAdditions
 
             IL.RoR2.HealthComponent.TakeDamage -= IL_CBTakeDamage;
             IL.RoR2.BulletAttack.DefaultHitCallback -= IL_CBDefaultHitCallback;
-            On.RoR2.CharacterBody.OnInventoryChanged -= GetItemCount;
         }
 
-        private void GetItemCount(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self)
+        public override void StoreItemCount(CharacterBody self)
         {
-            orig(self);
             ArtemisBlessingComponent cpt = self.gameObject.GetComponent<ArtemisBlessingComponent>();
-            if (!cpt) cpt = self.gameObject.AddComponent<ArtemisBlessingComponent>();
-            cpt.cachedIcnt = GetCount(self);
+            if (GetCount(self) > 0 || cpt)
+            {
+                if (!cpt)
+                    cpt = self.gameObject.AddComponent<ArtemisBlessingComponent>();
+                cpt.cachedIcnt = GetCount(self);
+            }
         }
-
 
         private void IL_CBDefaultHitCallback(ILContext il) // Reduces the damage falloff when equipped
         {

@@ -13,7 +13,7 @@ using UnityEngine;
 
 namespace KevinfromHP.KevinsAdditions
 {
-    public class PrimordialFlesh : Item_V2<PrimordialFlesh>
+    public class PrimordialFlesh : VirtItem_V2<PrimordialFlesh>
     {
         public override string displayName => "Primordial Flesh";
         public override ItemTier itemTier => ItemTier.Lunar;
@@ -27,9 +27,25 @@ namespace KevinfromHP.KevinsAdditions
 
 
         protected override string GetNameString(string langid = null) => displayName;
-        protected override string GetPickupString(string langid = null) => "Base Health Regen scales with current movement speed. \n<style=cDeath>Cannot heal through other means.</style>";
-        protected override string GetDescString(string langid = null) => "Base Health Regen scales with current movement speed. \n<style=cDeath>Cannot heal through other means.</style>";
-        protected override string GetLoreString(string langid = null) => "-Profile: 098 - \"Primordial Flesh\"- \n-Test Subject Name: XXXXXXXXXX-" +
+        protected override string GetPickupString(string langid = null) => "Health Regeneration scales with current movement speed. <style=cDeath>Cannot heal through other means.</style>";
+        protected override string GetDescString(string langid = null) => "<style=cIsHealth>Health Regeneration</style> scales to <style=cIsUtility>" + (int)(regenMult * 100) + "</style>% " + "<style=cStack>(+" + (int)(regenMult * 100) + " % per stack)</style>of your current velocity. <style=cDeath>Cannot heal through other means.</style>";
+        string testDate = "5/12/2057";
+        string testAdministrator = "Dr. Brawn";
+        string profileID = "098";
+        string subjectName = "XXXXXXXXX";
+        string specimen = "Primordial Flesh";
+        string tests = "<style=cIsDamage>Test 01:</style> First/Second/Third Degree Burns across 92% of the body." +
+            "\n<style=cIsDamage>Results:</style> Wounds all healed from the body, right down to the dead cells recovering back to their prior state." +
+            "\n\n<style=cIsDamage>Test 02:</style> Blunt Impact to the skull and ribcage (Accidental wounds - pierced lungs)." +
+            "\n<style=cIsDamage>Results:</style> Rapidly regained focus and breathing. Bones repaired themselves and fractured bones melded into the healing organs." +
+            "\n\n<style=cIsDamage>Test 03:</style> Removal of both arms." +
+            "\n<style=cIsDamage>Results:</style> Both arms grew back to a proper condition. Took a short bit longer than that of prior tests." +
+            "\n\n<style=cIsHealth><u>Conclusion:</u></style> Seek further studies of \"Lunar\" Objects for further studies of advanced alien medical and technological advancements." +
+            "\n\n\t<style=cStack>(Lore and Item Idea by</style> <style=cIsUtility>Skyline222</style><style=cStack>)</style>";
+
+        protected override string GetLoreString(string langid = null) => KevinsAdditionsPlugin.LabResultsLoreFormatter(testDate, testAdministrator, profileID, subjectName, specimen, tests);
+
+        /*protected override string GetLoreString(string langid = null) => "-Profile: 098 - \"Primordial Flesh\"- \n-Test Subject Name: XXXXXXXXXX-" +
             "\n\n-Test 01: First/Second/Third Degree Burns across 92% of the body-" +
             "\n-Results: Wounds all healed from the body, right down to the dead cells recovering back to their prior state-" +
             "\n\n-Test 02: Blunt Impact to the skull and ribcage (Accidental wounds - pierced lungs)-" +
@@ -37,13 +53,13 @@ namespace KevinfromHP.KevinsAdditions
             "\n\n-Test 03: Removal of both arms-" +
             "\n-Results: Both arms grew back to a proper condition. Took a short bit longer than that of prior tests.-" +
             "\n\n-End Result: Seek further studies of \"Lunar\" Objects, for further studies of advanced alien medical and technological advancements-" +
-            "\n\t(Lore and Item Idea by Skyline222)";
+            "\n\t(Lore and Item Idea by Skyline222)";*/
 
 
         public PrimordialFlesh()
         {
-            modelResourcePath = "@KevinsAdditions:Assets/KevinsAdditions/prefabs/ImpExtract.prefab";
-            iconResourcePath = "@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon.png";
+            modelResourcePath = "@KevinsAdditions:Assets/KevinsAdditions/prefabs/PrimordialFlesh.prefab";
+            iconResourcePath = "@KevinsAdditions:Assets/KevinsAdditions/textures/icons/PrimordialFlesh_icon.png";
         }
 
 
@@ -53,12 +69,11 @@ namespace KevinfromHP.KevinsAdditions
 
             IL.RoR2.CharacterBody.RecalculateStats += IL_SetHealthRegen;
             IL.RoR2.HealthComponent.Heal += IL_ManageHeals;
-            if(ilFailed)
+            if (ilFailed)
             {
                 IL.RoR2.CharacterBody.RecalculateStats -= IL_SetHealthRegen;
                 IL.RoR2.HealthComponent.Heal -= IL_ManageHeals;
             }
-            On.RoR2.CharacterBody.OnInventoryChanged += GetItemCount;
         }
         public override void Uninstall()
         {
@@ -66,15 +81,17 @@ namespace KevinfromHP.KevinsAdditions
 
             IL.RoR2.CharacterBody.RecalculateStats -= IL_SetHealthRegen;
             IL.RoR2.HealthComponent.Heal -= IL_ManageHeals;
-            On.RoR2.CharacterBody.OnInventoryChanged -= GetItemCount;
         }
 
-        private void GetItemCount(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self)
+        public override void StoreItemCount(CharacterBody self)
         {
-            orig(self);
             PrimordialFleshComponent cpt = self.gameObject.GetComponent<PrimordialFleshComponent>();
-            if (!cpt) cpt = self.gameObject.AddComponent<PrimordialFleshComponent>();
-            cpt.cachedIcnt = GetCount(self);
+            if (GetCount(self) > 0 || cpt)
+            {
+                if (!cpt)
+                    cpt = self.gameObject.AddComponent<PrimordialFleshComponent>();
+                cpt.cachedIcnt = GetCount(self);
+            }
         }
 
         private void IL_SetHealthRegen(ILContext il)

@@ -27,7 +27,7 @@ namespace KevinfromHP.KevinsAdditions
 #if DEBUG
                 "0." +
 #endif
-            "3.5.11";
+            "3.5.13";
         public const string ModName = "KevinsAdditions";
         public const string ModGuid = "com.KevinfromHP.KevinsAdditions";
 
@@ -95,7 +95,57 @@ namespace KevinfromHP.KevinsAdditions
         {
             T2Module.SetupAll_PluginStart(masterItemList);
             CatalogBoilerplate.ConsoleDump(Logger, masterItemList);
+            On.RoR2.CharacterBody.OnInventoryChanged += On_InventoryChanged;
         }
+        private void On_InventoryChanged(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self) //Checks item count and caches it. Also where the component is added
+        {
+            orig(self);
+            foreach (CatalogBoilerplate x in masterItemList)
+            {
+                if (x is VirtItem_V2 item)
+                    item.StoreItemCount(self);
+            }
+        }
+        public static string OrderManifestLoreFormatter(string deviceName, string estimatedDelivery, string sentTo, string trackingNumber, string shippingMethod, string orderDetails)
+        {
+            string[] Manifest =
+            {
+                $"<align=left>Estimated Delivery:<indent=70%>Sent To:</indent></align>",
+                $"<align=left>{estimatedDelivery}<indent=70%>{sentTo}</indent></align>",
+                "",
+                $"<indent=1%><style=cIsDamage><size=125%><u>  Shipping Details:\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0</u></size></style></indent>",
+                "",
+                $"<indent=2%>-Order: <style=cIsUtility>{deviceName}</style></indent>",
+                $"<indent=4%><style=cStack>Tracking Number:  {trackingNumber}</style></indent>",
+                "",
+                $"<indent=2%>-Shipping Method: <style=cIsHealth>{shippingMethod}</style></indent>",
+                "",
+                "",
+                $"<indent=2%>-Order Details: {orderDetails}</indent>",
+                "",
+                "",
+                "",
+                "<style=cStack>Delivery brought to you by the brand new </style><style=cIsUtility>Orbital Drop-Crate System (TM)</style>. <style=cStack><u>No refunds.</u></style>"
+            };
+            return String.Join("\n", Manifest);
+        }
+        public static string LabResultsLoreFormatter(string testDate, string testAdministrator, string profileID, string subjectName, string specimenName, string tests)
+        {
+            string[] Manifest =
+            {
+                $"<align=left>Test Date:<indent=70%>Test Administrator:</indent></align>",
+                $"<align=left>{testDate}<indent=70%>{testAdministrator}</indent></align>",
+                "",
+                $"<indent=2%>-Specimen: <style=cIsUtility>\"{specimenName}\"</style></indent>",
+                $"<indent=4%><style=cStack>Sample ID: {profileID}</style></indent>",
+                $"<indent=2%>-Subject Name: <style=cIsHealth>{subjectName}</style></indent>",
+                "",
+                $"<indent=1%><style=cIsDamage><size=125%><u>  Test Results:\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0</u></size></style></indent>",
+                $"<indent=2%>{tests}</indent>",
+            };
+            return String.Join("\n", Manifest);
+        }
+
     }
     public static class Assets
     {
@@ -141,4 +191,5 @@ namespace KevinfromHP.KevinsAdditions
             return Provider;
         }
     }
+
 }

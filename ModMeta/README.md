@@ -24,15 +24,27 @@ Special thanks to Nebulon for making the icons and models used!
 	* Heal based on your current velocity (Hooray for Loader).
 	* Cannot heal from any other means.
 	* Also, other vanilla regen items do not affect the regeneration, e.g. Meat, Slug, or Acrid's Melee.
+* Seeking Stone - Legendary
+	* Provides aim assist (and homing projectiles) while reducing recoil and weapon bloom.
+	* Accuracy increase essentially acts as an aimbot with limitations that decrease as you stack it. Shotgun purposeully spread not affected by weapon bloom change!
+	* Special thanks to Rein for helping me code some of this. Aimbot concept by Lodington
 * Adamantium Chestplate - Uncommon
 	* Gives a flat increase to your armor.
 	* This is different to the Repulsion Armor Plate, which gives flat damage reduction.
-* Seeking Stone - Uncommon
-	* Increases accuracy and projectile speed, reduces recoil and weapon bloom.
-	* Accuracy increase essentially acts as an aimbot with limitations that decrease as you stack it. Shotgun spread not affected by weapon bloom change!
-	* Special thanks to Rein for helping me code some of this. Aimbot concept by Lodington
 
 ## Changelog
+
+* 3.5.12 -
+	* Logbook has received an overhaul
+	* Primordial Flesh has received a model and icon
+	* Artemis' Blessing icon has been remastered
+	* Seeking Stone has received a new model and icon
+	* Seeking Stone made into a Tier 3 item
+	* Seeking Stone aim field has been buffed
+	* Seeking Stone no longer increases projectile velocity; Replaced with a "heat seeking" function
+	* Imp Extract Skill overlap disabled
+	* Imp Extract no longer uses two equipment stock
+	* Cleaned up performance
 
 * 3.5.11 -
 	* Imp Extract Re-implemented; now functions perfectly in multiplayer
@@ -78,9 +90,8 @@ Special thanks to Nebulon for making the icons and models used!
 
 ## To Do
 
-* Lunar Item Primordial Flesh coded, requires model and icon
-* Lunar Item Seeking Stone coded, requires icon
-* May remaster the model for Artemis' Blesing, will DEFINITELY remaster icon for Artemis' Blessing
-* May or May not do this: Makes items show up on the player model.
-
-
+* Sometimes health regen can still trigger while under the effects of Primordial Flesh. I need to figure out what makes this happen
+* Imp Extract is still a little glitchy
+* Make Primordial Flesh function more friendly with mods
+* Redo Imp Extract particle effects to use Imp Overlord ones
+* Make more items
