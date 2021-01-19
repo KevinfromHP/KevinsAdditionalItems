@@ -27,7 +27,7 @@ namespace KevinfromHP.KevinsAdditions
 #if DEBUG
                 "0." +
 #endif
-            "3.5.13";
+            "3.5.12";
         public const string ModName = "KevinsAdditions";
         public const string ModGuid = "com.KevinfromHP.KevinsAdditions";
 
@@ -76,6 +76,9 @@ namespace KevinfromHP.KevinsAdditions
             }*/
             ResourcesAPI.AddProvider(Assets.PopulateAssets());
             cfgFile = new ConfigFile(Path.Combine(Paths.ConfigPath, ModGuid + ".cfg"), true);
+
+            Logger.LogDebug("Replacing Item Shaders with Hopoo shaders...");
+            Assets.ReplaceShaders();
 
             masterItemList = T2Module.InitAll<CatalogBoilerplate>(new T2Module.ModInfo
             {
@@ -149,7 +152,7 @@ namespace KevinfromHP.KevinsAdditions
     }
     public static class Assets
     {
-        public static AssetBundle MainAssetBundle = null;
+        public static AssetBundle mainAssetBundle = null;
         public static AssetBundleResourcesProvider Provider;
 
         public static Texture charPortrait;
@@ -162,34 +165,52 @@ namespace KevinfromHP.KevinsAdditions
 
         public static IResourceProvider PopulateAssets()
         {
-            if (MainAssetBundle == null)
+            using (var assetStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("KevinsAdditions.kevinsadditions_assets"))
             {
-                using (var assetStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("KevinsAdditions.kevinsadditions_assets"))
-                {
-                    MainAssetBundle = AssetBundle.LoadFromStream(assetStream);
-                    Provider = new AssetBundleResourcesProvider("@KevinsAdditions", MainAssetBundle);
-                }
+                mainAssetBundle = AssetBundle.LoadFromStream(assetStream);
+                Provider = new AssetBundleResourcesProvider("@KevinsAdditions", mainAssetBundle);
             }
 
-            // include this if you're using a custom soundbank
-            /*using (Stream manifestResourceStream2 = Assembly.GetExecutingAssembly().GetManifestResourceStream("ExampleSurvivor.ExampleSurvivor.bnk"))
-            {
-                byte[] array = new byte[manifestResourceStream2.Length];
-                manifestResourceStream2.Read(array, 0, array.Length);
-                SoundAPI.SoundBanks.Add(array);
-            }*/
-
-            // and now we gather the assets
-            //charPortrait = MainAssetBundle.LoadAsset<Sprite>("ExampleSurvivorBody").texture;
-
-            iconP = MainAssetBundle.LoadAsset<Sprite>("@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon");
-            icon1 = MainAssetBundle.LoadAsset<Sprite>("@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon");
-            icon2 = MainAssetBundle.LoadAsset<Sprite>("@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon");
-            icon3 = MainAssetBundle.LoadAsset<Sprite>("@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon");
-            icon4 = MainAssetBundle.LoadAsset<Sprite>("@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon");
+            iconP = mainAssetBundle.LoadAsset<Sprite>("@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon");
+            icon1 = mainAssetBundle.LoadAsset<Sprite>("@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon");
+            icon2 = mainAssetBundle.LoadAsset<Sprite>("@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon");
+            icon3 = mainAssetBundle.LoadAsset<Sprite>("@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon");
+            icon4 = mainAssetBundle.LoadAsset<Sprite>("@KevinsAdditions:Assets/KevinsAdditions/textures/icons/icon");
 
             return Provider;
         }
-    }
 
+        public static void ReplaceShaders()
+        {
+            var materials = mainAssetBundle.LoadAllAssets<Material>();
+            //KevinsAdditionsPlugin._logger.LogError("materials is this long: " + materials.Length);
+            for (int i = 0; i < materials.Length; i++)
+            {
+                //KevinsAdditionsPlugin._logger.LogError("material " + materials[i].name);
+                if (materials[i].shader.name == "Standard")
+                    materials[i].shader = Resources.Load<Shader>("shaders/deferred/hgstandard");
+
+                //Imp Extract Rematerial
+                if (materials[i].name == "ImpExtractGlass")
+                {
+                    materials[i].shader = Resources.Load<Shader>("shaders/fx/hgintersectioncloudremap");
+                    var infusion = Resources.Load<GameObject>("prefabs/pickupmodels/PickupInfusion");
+                    MeshRenderer[] meshRenderers = infusion.GetComponentsInChildren<MeshRenderer>();
+                    foreach (MeshRenderer meshRenderer in meshRenderers)
+                    {
+                        if (meshRenderer.material.name.ToLower().Contains("glass"))
+                        {
+                            materials[i].CopyPropertiesFromMaterial(meshRenderer.material);
+                            List<string> properties = new List<string>();
+                            materials[i].GetTexturePropertyNames(properties);
+                            foreach(string property in properties)
+                            {
+                                KevinsAdditionsPlugin._logger.LogError(property);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

@@ -11,19 +11,6 @@ Special thanks to Nebulon for making the icons and models used!
 
 ## Items
 
-* Imp Extract - Equipment
-	* Transform into an Imp Overlord and wreak havoc for a period of time.
-	* *Primary Skill* - Void Spikes
-	* *Secondary Skill* - Ground Pound
-	* *Utility Skill* - Blink
-	* *Special Skill* - Revert Form
-* Artemis' Blessing - Lunar
-	* Increases damage the further you are from a target. Decreases damage the closer you are to a target.
-	* Based off a median range (point where damage output is unaffected) that can be configured in the config.
-* Primordial Flesh - Lunar
-	* Heal based on your current velocity (Hooray for Loader).
-	* Cannot heal from any other means.
-	* Also, other vanilla regen items do not affect the regeneration, e.g. Meat, Slug, or Acrid's Melee.
 * Seeking Stone - Legendary
 	* Provides aim assist (and homing projectiles) while reducing recoil and weapon bloom.
 	* Accuracy increase essentially acts as an aimbot with limitations that decrease as you stack it. Shotgun purposeully spread not affected by weapon bloom change!
@@ -31,6 +18,19 @@ Special thanks to Nebulon for making the icons and models used!
 * Adamantium Chestplate - Uncommon
 	* Gives a flat increase to your armor.
 	* This is different to the Repulsion Armor Plate, which gives flat damage reduction.
+* Artemis' Blessing - Lunar
+	* Increases damage the further you are from a target. Decreases damage the closer you are to a target.
+	* Based off a median range (point where damage output is unaffected) that can be configured in the config.
+* Primordial Flesh - Lunar
+	* Heal based on your current velocity (Hooray for Loader).
+	* Cannot heal from any other means.
+	* Also, other vanilla regen items do not affect the regeneration, e.g. Meat, Slug, or Acrid's Melee.
+* Imp Extract - Equipment
+	* Transform into an Imp Overlord and wreak havoc for a period of time.
+	* *Primary Skill* - Void Spikes
+	* *Secondary Skill* - Ground Pound
+	* *Utility Skill* - Blink
+	* *Special Skill* - Revert Form
 
 ## Changelog
 
@@ -91,6 +91,7 @@ Special thanks to Nebulon for making the icons and models used!
 ## To Do
 
 * Sometimes health regen can still trigger while under the effects of Primordial Flesh. I need to figure out what makes this happen
+* Imp Overlord is added to the logbook again. I need to make it so it isn't
 * Imp Extract is still a little glitchy
 * Make Primordial Flesh function more friendly with mods
 * Redo Imp Extract particle effects to use Imp Overlord ones
