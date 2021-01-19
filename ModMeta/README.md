@@ -13,7 +13,7 @@ Special thanks to Nebulon for making the icons and models used!
 
 * Seeking Stone - Legendary
 	* Provides aim assist (and homing projectiles) while reducing recoil and weapon bloom.
-	* Accuracy increase essentially acts as an aimbot with limitations that decrease as you stack it. Shotgun purposeully spread not affected by weapon bloom change!
+	* Accuracy increase essentially acts as an aimbot with limitations that decrease as you stack it. Shotgun purposefully spread not affected by weapon bloom change!
 	* Special thanks to Rein for helping me code some of this. Aimbot concept by Lodington
 * Adamantium Chestplate - Uncommon
 	* Gives a flat increase to your armor.
@@ -24,7 +24,7 @@ Special thanks to Nebulon for making the icons and models used!
 * Primordial Flesh - Lunar
 	* Heal based on your current velocity (Hooray for Loader).
 	* Cannot heal from any other means.
-	* Also, other vanilla regen items do not affect the regeneration, e.g. Meat, Slug, or Acrid's Melee.
+	* The only other items that affect the regen by any means are Titanic Knurl and Radiant Pearl.
 * Imp Extract - Equipment
 	* Transform into an Imp Overlord and wreak havoc for a period of time.
 	* *Primary Skill* - Void Spikes
@@ -33,6 +33,10 @@ Special thanks to Nebulon for making the icons and models used!
 	* *Special Skill* - Revert Form
 
 ## Changelog
+
+# 3.5.13 -
+	* Items now use the Hopoo Games shaders, meaning they fit into the world much more nicely.
+	* Primordial Flesh's function is more stable
 
 * 3.5.12 -
 	* Logbook has received an overhaul
@@ -90,9 +94,7 @@ Special thanks to Nebulon for making the icons and models used!
 
 ## To Do
 
-* Sometimes health regen can still trigger while under the effects of Primordial Flesh. I need to figure out what makes this happen
 * Imp Overlord is added to the logbook again. I need to make it so it isn't
 * Imp Extract is still a little glitchy
-* Make Primordial Flesh function more friendly with mods
 * Redo Imp Extract particle effects to use Imp Overlord ones
 * Make more items

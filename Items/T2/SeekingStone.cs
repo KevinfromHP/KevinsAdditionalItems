@@ -72,6 +72,12 @@ namespace KevinfromHP.KevinsAdditions
                 if (!cpt)
                     cpt = self.gameObject.AddComponent<SeekingStoneComponent>();
                 cpt.cachedIcnt = GetCount(self);
+
+                //this just improves performance so it won't be updating when it doesn't need to
+                if (GetCount(self) == 0)
+                    cpt.enabled = false;
+                else
+                    cpt.enabled = true;
             }
         }
 
@@ -156,8 +162,8 @@ namespace KevinfromHP.KevinsAdditions
             c.EmitDelegate<Action<ProjectileSteerTowardTarget, Vector3>>((projectileSteerTowardTarget, vector) =>
             {
                 var cpt = projectileSteerTowardTarget.gameObject.GetComponent<MaintainTarget>();
-                if(cpt != null && cpt.isAffectedByGravity)
-                vector += Physics.gravity;
+                if (cpt != null && cpt.isAffectedByGravity)
+                    vector += Physics.gravity;
             });
         }
 
@@ -227,7 +233,7 @@ namespace KevinfromHP.KevinsAdditions
         public HurtBox target;
         VirtBullseyeSearch bullseyeSearch = new VirtBullseyeSearch();
 
-
+        
         public void Awake()
         {
             body = gameObject.GetComponent<CharacterBody>();

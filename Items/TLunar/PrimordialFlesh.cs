@@ -21,7 +21,7 @@ namespace KevinfromHP.KevinsAdditions
 
         [AutoConfigUpdateActions(AutoConfigUpdateActionTypes.InvalidateLanguage)]
         [AutoConfig("Regen Multiplier", AutoConfigFlags.PreventNetMismatch, 0f, 10f)]
-        public float regenMult { get; private set; } = .1f;
+        public float regenMult { get; private set; } = .125f;
 
         private bool ilFailed = false;
 
@@ -89,18 +89,55 @@ namespace KevinfromHP.KevinsAdditions
             if (GetCount(self) > 0 || cpt)
             {
                 if (!cpt)
+                {
                     cpt = self.gameObject.AddComponent<PrimordialFleshComponent>();
+                    cpt.characterBody = self;
+                }
                 cpt.cachedIcnt = GetCount(self);
+                if (GetCount(self) == 0)
+                    cpt.enabled = false;
+                else
+                    cpt.enabled = true;
             }
         }
 
         private void IL_SetHealthRegen(ILContext il)
         {
+            ILCursor c = new ILCursor(il);
+            //bool ILFound;
+
+            c.TryGotoNext(
+                x => x.MatchRet());
+
+            c.Emit(OpCodes.Ldarg_0);
+            c.Emit(OpCodes.Ldloc, 46); //corresponds to num15 in the method. Factors titanic knurl bonus.
+            c.Emit(OpCodes.Ldloc, 50); //corresponds to num56 in the method. Factors radiant pearl.
+            c.Emit(OpCodes.Ldloc, 51); //corresponds to num46 in the method. Factors difficulty and fire
+            c.EmitDelegate<Action<CharacterBody, float, float, float>>((body, knurlRegen, shinyPearlRegen, difficultyAndFireRegen) =>
+            {
+                PrimordialFleshComponent cpt = body.gameObject.GetComponent<PrimordialFleshComponent>();
+                if (!cpt || cpt.cachedIcnt == 0)
+                    return;
+
+                float baseRegen = body.baseRegen + body.levelRegen * (body.level - 1); //base regen with no items
+                float regen = (baseRegen + knurlRegen + shinyPearlRegen) * difficultyAndFireRegen;
+
+                float curseDebuff = body.inventory.GetItemCount(ItemIndex.HealthDecay);
+                if (curseDebuff > 0)
+                    regen = Math.Min(regen, 0f) - body.maxHealth / body.cursePenalty / (float)curseDebuff; //factors in the curse
+
+                float velocity = body.rigidbody.velocity.magnitude;
+                body.regen = regen * velocity * cpt.cachedIcnt * regenMult;
+            });
+        }
+
+        /*private void IL_SetHealthRegen(ILContext il)
+        {
             /* numbers not needed in the regen calc
              * num42 = Cautious Slug
              * num43 = Meat
              * num44 = Acrid Regen
-             */
+             *
             ILCursor c = new ILCursor(il);
             bool ILFound;
 
@@ -151,15 +188,16 @@ namespace KevinfromHP.KevinsAdditions
                 if (curse > 0)
                 {
                     body.regen += (body.maxHealth * body.cursePenalty * curse) - excluded; // Undoes curse, adjusts regen
-                    body.regen -= body.maxHealth * body.cursePenalty * curse; // Redoes curse
-                }
+            body.regen -= body.maxHealth * body.cursePenalty * curse; // Redoes curse
+        }
                 else
                     body.regen -= excluded;
 
                 float speed = body.characterMotor.velocity.magnitude;
                 body.regen *= speed * cpt.cachedIcnt * regenMult;
             });
-        }
+        }*/
+
 
         private void IL_ManageHeals(ILContext il) /*cancels out anything like bustling fungus or medkit*/
         {
@@ -195,7 +233,22 @@ namespace KevinfromHP.KevinsAdditions
 
     public class PrimordialFleshComponent : MonoBehaviour
     {
-        public int cachedIcnt = 0;
+        public int cachedIcnt;
+        public CharacterBody characterBody;
+        public float velocitySqrd;
+
+        public void Start()
+        {
+            velocitySqrd = characterBody.rigidbody.velocity.sqrMagnitude;
+        }
+
+        public void Update()
+        {
+            float updateVelocity = characterBody.rigidbody.velocity.sqrMagnitude;
+            if (velocitySqrd != updateVelocity && cachedIcnt > 0)
+                characterBody.statsDirty = true; // if stats are dirty, it runs RecalculateStats
+            velocitySqrd = updateVelocity;
+        }
     }
 }
 

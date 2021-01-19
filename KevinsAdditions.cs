@@ -68,13 +68,9 @@ namespace KevinfromHP.KevinsAdditions
             _logger = Logger;
 
             Logger.LogDebug("Loading assets...");
-            /*using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("KevinsAdditions.kevinsadditions_assets"))
-            {
-                var bundle = AssetBundle.LoadFromStream(stream);
-                var provider = new AssetBundleResourcesProvider("@KevinsAdditions", bundle);
-                ResourcesAPI.AddProvider(provider);
-            }*/
             ResourcesAPI.AddProvider(Assets.PopulateAssets());
+
+
             cfgFile = new ConfigFile(Path.Combine(Paths.ConfigPath, ModGuid + ".cfg"), true);
 
             Logger.LogDebug("Replacing Item Shaders with Hopoo shaders...");
@@ -201,12 +197,12 @@ namespace KevinfromHP.KevinsAdditions
                         if (meshRenderer.material.name.ToLower().Contains("glass"))
                         {
                             materials[i].CopyPropertiesFromMaterial(meshRenderer.material);
-                            List<string> properties = new List<string>();
+                            /*List<string> properties = new List<string>();
                             materials[i].GetTexturePropertyNames(properties);
                             foreach(string property in properties)
                             {
                                 KevinsAdditionsPlugin._logger.LogError(property);
-                            }
+                            }*/
                         }
                     }
                 }
