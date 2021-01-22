@@ -11,6 +11,8 @@ using TILER2;
 using UnityEngine;
 using static TILER2.MiscUtil;
 using Path = System.IO.Path;
+using System.IO;
+
 
 
 namespace KevinfromHP.KevinsAdditions
@@ -27,7 +29,7 @@ namespace KevinfromHP.KevinsAdditions
 #if DEBUG
                 "0." +
 #endif
-            "3.5.12";
+            "3.5.15";
         public const string ModName = "KevinsAdditions";
         public const string ModGuid = "com.KevinfromHP.KevinsAdditions";
 
@@ -179,32 +181,62 @@ namespace KevinfromHP.KevinsAdditions
         public static void ReplaceShaders()
         {
             var materials = mainAssetBundle.LoadAllAssets<Material>();
+            List<String> standardBlacklist = new List<string>() { "AdamantiumChestplate" };
             //KevinsAdditionsPlugin._logger.LogError("materials is this long: " + materials.Length);
             for (int i = 0; i < materials.Length; i++)
             {
                 //KevinsAdditionsPlugin._logger.LogError("material " + materials[i].name);
-                if (materials[i].shader.name == "Standard")
+                if (materials[i].shader.name == "Standard" && !standardBlacklist.Contains(materials[i].name))
                     materials[i].shader = Resources.Load<Shader>("shaders/deferred/hgstandard");
 
-                //Imp Extract Rematerial
-                if (materials[i].name == "ImpExtractGlass")
+                switch (materials[i].name)
                 {
-                    materials[i].shader = Resources.Load<Shader>("shaders/fx/hgintersectioncloudremap");
-                    var infusion = Resources.Load<GameObject>("prefabs/pickupmodels/PickupInfusion");
-                    MeshRenderer[] meshRenderers = infusion.GetComponentsInChildren<MeshRenderer>();
-                    foreach (MeshRenderer meshRenderer in meshRenderers)
-                    {
-                        if (meshRenderer.material.name.ToLower().Contains("glass"))
+                    case "ImpExtractGlass":
+                        materials[i].shader = Resources.Load<Shader>("shaders/fx/hgintersectioncloudremap");
+                        var infusion = Resources.Load<GameObject>("prefabs/pickupmodels/PickupInfusion");
+                        MeshRenderer[] meshRenderers = infusion.GetComponentsInChildren<MeshRenderer>();
+                        foreach (MeshRenderer meshRenderer in meshRenderers)
                         {
-                            materials[i].CopyPropertiesFromMaterial(meshRenderer.material);
-                            /*List<string> properties = new List<string>();
-                            materials[i].GetTexturePropertyNames(properties);
-                            foreach(string property in properties)
+                            if (meshRenderer.material.name.ToLower().Contains("glass"))
                             {
-                                KevinsAdditionsPlugin._logger.LogError(property);
-                            }*/
+                                materials[i].CopyPropertiesFromMaterial(meshRenderer.material);
+
+                                materials[i].SetFloat("_Cull", 1f);
+                                materials[i].SetFloat("_AlphaBoost", 15f);
+                                Vector4 colorTint = new Vector4(0.79f, 0.435f, 0.87f, 1f);
+                                materials[i].SetVector("_TintColor", colorTint);
+                                materials[i].SetFloat("_RimPower", 5f);
+                                materials[i].SetFloat("_RimStrength", 4f);
+                                materials[i].SetFloat("_InvFade", 1f);
+                                materials[i].SetFloat("_Boost", .2f);
+                                materials[i].SetFloat("_SrcBlendFloat", 1f);
+                                materials[i].SetFloat("_DstBlendFloat", 1f);
+                                /*materials[i].SetTexture("_Cloud1Tex", mainAssetBundle.LoadAsset<Texture>("white"));
+                                materials[i].SetTexture("_Cloud2Tex", mainAssetBundle.LoadAsset<Texture>("white"));
+                                materials[i].SetTexture("_RemapTex", mainAssetBundle.LoadAsset<Texture>("white"));
+                                materials[i].SetTexture("_MainTex", mainAssetBundle.LoadAsset<Texture>("white"));*/
+                                materials[i].SetFloat("_IntersectionStrength", 2f);
+                            }
                         }
-                    }
+                        break;
+
+                    case "ImpExtractJuice":
+                        Vector4 emissionColor = new Vector4(0.8867f, 0.0086f, 0f, 0.8f);
+                        materials[i].SetVector("_EmColor", emissionColor);
+                        materials[i].SetFloat("_EmPower", 0.6f);
+                        break;
+
+                    case "EmbersParticle":
+                        var particleSystemRenderers = Resources.Load<GameObject>("Prefabs/characterbodies/ImpBossBody").GetComponentsInChildren<ParticleSystemRenderer>();
+                        foreach (ParticleSystemRenderer particleSystemRenderer in particleSystemRenderers)
+                        {
+                            if (particleSystemRenderer.name == "Dust")
+                            {
+                                materials[i].shader = particleSystemRenderer.material.shader;
+                                materials[i].CopyPropertiesFromMaterial(particleSystemRenderer.material);
+                            }
+                        }
+                        break;
                 }
             }
         }

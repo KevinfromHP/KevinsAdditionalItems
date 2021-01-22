@@ -34,9 +34,10 @@ Special thanks to Nebulon for making the icons and models used!
 
 ## Changelog
 
-# 3.5.13 -
+* 3.5.15 -
 	* Items now use the Hopoo Games shaders, meaning they fit into the world much more nicely.
 	* Primordial Flesh's function is more stable
+	* Imp Extract now uses Imp Overlord particle effects
 
 * 3.5.12 -
 	* Logbook has received an overhaul
@@ -96,5 +97,4 @@ Special thanks to Nebulon for making the icons and models used!
 
 * Imp Overlord is added to the logbook again. I need to make it so it isn't
 * Imp Extract is still a little glitchy
-* Redo Imp Extract particle effects to use Imp Overlord ones
 * Make more items

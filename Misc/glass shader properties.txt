@@ -1,0 +1,48 @@
+_SrcBlendFloat: 1
+_DstBlendFloat: 1
+_TintColor: (0.6, 0.6, 0.6, 1.0)
+_CutoffScroll: (0.0, 0.0, 0.0, 0.0)
+_InvFade: 0
+_SoftPower: 1
+_Boost: 0.38
+_RimPower: 0.5
+_RimStrength: 0.55
+_AlphaBoost: 3.28
+_IntersectionStrength: 0.7
+_Cull: 2
+_ExternalAlpha: 1
+_VertexColorsOn: 0
+_TriplanarOn: 0
+_MainTex
+_Cloud1Tex
+_Cloud2Tex
+_RemapTex
+
+
+
+cloud shader
+
+_SrcBlend
+_DstBlend
+_InternalSimpleBlendMode
+_TintColor
+_MainTex
+_RemapTex
+_InvFade
+_Boost
+_AlphaBoost
+_AlphaBias
+_FadeCloseOn
+_FadeCloseDistance
+_Cull
+_ZTest
+_DepthOffset
+_CloudsOn
+_CloudOffsetOn
+_DistortionStrength
+_Cloud1Tex
+_Cloud2Tex
+_CutoffScroll
+_VertexColorsOn
+_VertexAlphaOn
+bla bla bla

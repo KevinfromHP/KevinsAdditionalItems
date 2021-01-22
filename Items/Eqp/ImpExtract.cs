@@ -26,12 +26,14 @@ namespace KevinfromHP.KevinsAdditions
 
         public BuffIndex ImpExtractBuff { get; private set; }
 
+        private float damageMult = 0.6f;
+
         private bool ilFailed = false;
 
         public override float cooldown { get; protected set; } = 100f;
         protected override string GetNameString(string langid = null) => displayName;
         protected override string GetPickupString(string langid = null) => "Transform into an Imp Overlord for " + duration + " seconds.";
-        protected override string GetDescString(string langid = null) => "<style=cIsDamage>Transform</style> into an <style=cDeath>Imp Overlord</style> for <style=cIsUtility>" + duration + "</style> seconds. Damage increased by <style=cIsDamage>40%</style> while active.";
+        protected override string GetDescString(string langid = null) => "<style=cIsDamage>Transform</style> into an <style=cDeath>Imp Overlord</style> for <style=cIsUtility>" + duration + "</style> seconds. Damage increased by <style=cIsDamage>" + (damageMult * 100) + "%</style> while active.";
 
         string deviceName = "<style=cIsHealth>Crux Brand Silly Red Seltzer!</style>";
         string estimatedDelivery = "04/12/2056";
@@ -100,7 +102,7 @@ namespace KevinfromHP.KevinsAdditions
             if (sender.HasBuff(ImpExtractBuff))
             {
                 args.healthMultAdd -= .75f;
-                args.damageMultAdd += .45f;
+                args.damageMultAdd += .70f;
             }
         }
 
