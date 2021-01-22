@@ -35,7 +35,7 @@ Special thanks to Nebulon for making the icons and models used!
 ## Changelog
 
 * 3.5.15 -
-	* Items now use the Hopoo Games shaders, meaning they fit into the world much more nicely.
+	* Items now use the Hopoo Games shaders, meaning they fit into the world much more nicely
 	* Primordial Flesh's function is more stable
 	* Imp Extract now uses Imp Overlord particle effects
 
